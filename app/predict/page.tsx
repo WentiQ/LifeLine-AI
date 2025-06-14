@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { Suspense, useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -371,455 +371,457 @@ export default function PredictPage() {
   const hasSavedPrediction = typeof window !== "undefined" && !!localStorage.getItem("savedPrediction")
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-white shadow-sm border-b">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center py-4">
-            <Link href="/dashboard">
-              <Button variant="ghost" size="sm">
-                <ArrowLeft className="h-4 w-4 mr-2" />
-                Back to Dashboard
-              </Button>
-            </Link>
-            <div className="ml-4">
-              <h1 className="text-2xl font-bold text-gray-900">Disease Prediction</h1>
+    <Suspense fallback={<div>Loading...</div>}>
+      <div className="min-h-screen bg-gray-50">
+        {/* Header */}
+        <header className="bg-white shadow-sm border-b">
+          <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex items-center py-4">
+              <Link href="/dashboard">
+                <Button variant="ghost" size="sm">
+                  <ArrowLeft className="h-4 w-4 mr-2" />
+                  Back to Dashboard
+                </Button>
+              </Link>
+              <div className="ml-4">
+                <h1 className="text-2xl font-bold text-gray-900">Disease Prediction</h1>
+              </div>
             </div>
           </div>
-        </div>
-      </header>
+        </header>
 
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Progress Indicator */}
-        <div className="mb-8">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-sm font-medium">Step {step} of 3</span>
-            <span className="text-sm text-gray-500">{Math.round((step / 3) * 100)}% Complete</span>
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          {/* Progress Indicator */}
+          <div className="mb-8">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-sm font-medium">Step {step} of 3</span>
+              <span className="text-sm text-gray-500">{Math.round((step / 3) * 100)}% Complete</span>
+            </div>
+            <Progress value={(step / 3) * 100} className="h-2" />
           </div>
-          <Progress value={(step / 3) * 100} className="h-2" />
-        </div>
 
-        {/* Step 1: Show all saved predictions if available */}
-        {step === 1 && (
-          <>
-            {/* Current Symptoms Card */}
+          {/* Step 1: Show all saved predictions if available */}
+          {step === 1 && (
+            <>
+              {/* Current Symptoms Card */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center">
+                    <Thermometer className="h-6 w-6 mr-2 text-red-500" />
+                    Current Symptoms
+                  </CardTitle>
+                  <CardDescription>Select all symptoms you're currently experiencing</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                    {commonSymptoms.map((symptom) => (
+                      <div key={symptom} className="flex items-center space-x-2">
+                        <Checkbox
+                          id={symptom}
+                          checked={symptoms.includes(symptom)}
+                          onCheckedChange={() => handleSymptomToggle(symptom)}
+                        />
+                        <Label htmlFor={symptom} className="text-sm">
+                          {symptom}
+                        </Label>
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="additional">Additional Symptoms</Label>
+                    <Textarea
+                      id="additional"
+                      placeholder="Describe any other symptoms you're experiencing..."
+                      rows={3}
+                      value={additionalSymptoms}
+                      onChange={(e) => setAdditionalSymptoms(e.target.value)}
+                    />
+                  </div>
+
+                  <Button onClick={() => setStep(2)} className="w-full" disabled={symptoms.length === 0}>
+                    Continue to Medical History
+                  </Button>
+                </CardContent>
+              </Card>
+
+              {/* Saved Predictions Section - below symptoms */}
+              {savedPredictions.length > 0 && (
+                <div className="mt-6">
+                  <h2 className="text-lg font-semibold mb-2">Saved Predictions</h2>
+                  <div className="grid gap-4 md:grid-cols-2">
+                    {savedPredictions.map((pred, idx) => (
+                      <Card key={pred.id || idx} className="relative border-2 border-gray-200 shadow-sm bg-white">
+                        <CardContent className="py-4">
+                          <div className="mb-2 text-xs text-gray-500">
+                            Saved: {new Date(pred.savedAt).toLocaleString()}
+                          </div>
+                          <div className="font-bold mb-1">{pred.primaryDiagnosis}</div>
+                          <div className="mb-2 text-sm">
+                            Risk: <span className="font-semibold">{pred.riskLevel}</span>
+                          </div>
+                          <Button
+                            size="sm"
+                            className="mr-2"
+                            onClick={() => handleViewSaved(pred)}
+                          >
+                            View
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="secondary"
+                            className="mr-2"
+                            onClick={() => handleShare(pred)}
+                          >
+                            Share
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="mr-2"
+                            onClick={() => handleDownloadPDF(pred, idx)}
+                          >
+                            Download PDF
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="destructive"
+                            onClick={() => handleDeleteSaved(idx)}
+                          >
+                            Delete
+                          </Button>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </>
+          )}
+
+          {step === 2 && (
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center">
-                  <Thermometer className="h-6 w-6 mr-2 text-red-500" />
-                  Current Symptoms
+                  <Calendar className="h-6 w-6 mr-2 text-blue-500" />
+                  Medical History & Information
                 </CardTitle>
-                <CardDescription>Select all symptoms you're currently experiencing</CardDescription>
+                <CardDescription>Provide additional information for more accurate predictions</CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                  {commonSymptoms.map((symptom) => (
-                    <div key={symptom} className="flex items-center space-x-2">
-                      <Checkbox
-                        id={symptom}
-                        checked={symptoms.includes(symptom)}
-                        onCheckedChange={() => handleSymptomToggle(symptom)}
-                      />
-                      <Label htmlFor={symptom} className="text-sm">
-                        {symptom}
-                      </Label>
-                    </div>
-                  ))}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="age">Age</Label>
+                    <Input id="age" type="number" placeholder="Enter your age" />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="gender">Gender</Label>
+                    <Input id="gender" placeholder="Male/Female/Other" />
+                  </div>
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="additional">Additional Symptoms</Label>
+                  <Label htmlFor="conditions">Existing Medical Conditions</Label>
                   <Textarea
-                    id="additional"
-                    placeholder="Describe any other symptoms you're experiencing..."
+                    id="conditions"
+                    placeholder="List any chronic conditions, allergies, or ongoing health issues..."
                     rows={3}
-                    value={additionalSymptoms}
-                    onChange={(e) => setAdditionalSymptoms(e.target.value)}
                   />
                 </div>
 
-                <Button onClick={() => setStep(2)} className="w-full" disabled={symptoms.length === 0}>
-                  Continue to Medical History
-                </Button>
+                <div className="space-y-2">
+                  <Label htmlFor="medications">Current Medications</Label>
+                  <Textarea id="medications" placeholder="List all medications you're currently taking..." rows={3} />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="family-history">Family Medical History</Label>
+                  <Textarea id="family-history" placeholder="Any relevant family medical history..." rows={3} />
+                </div>
+
+                <div className="flex space-x-4">
+                  <Button variant="outline" onClick={() => setStep(1)}>
+                    Back
+                  </Button>
+                  <Button onClick={handleAnalyze} className="flex-1">
+                    <Brain className="h-4 w-4 mr-2" />
+                    Analyze with AI
+                  </Button>
+                </div>
               </CardContent>
             </Card>
+          )}
 
-            {/* Saved Predictions Section - below symptoms */}
-            {savedPredictions.length > 0 && (
-              <div className="mt-6">
-                <h2 className="text-lg font-semibold mb-2">Saved Predictions</h2>
-                <div className="grid gap-4 md:grid-cols-2">
-                  {savedPredictions.map((pred, idx) => (
-                    <Card key={pred.id || idx} className="relative border-2 border-gray-200 shadow-sm bg-white">
-                      <CardContent className="py-4">
-                        <div className="mb-2 text-xs text-gray-500">
-                          Saved: {new Date(pred.savedAt).toLocaleString()}
-                        </div>
-                        <div className="font-bold mb-1">{pred.primaryDiagnosis}</div>
-                        <div className="mb-2 text-sm">
-                          Risk: <span className="font-semibold">{pred.riskLevel}</span>
-                        </div>
-                        <Button
-                          size="sm"
-                          className="mr-2"
-                          onClick={() => handleViewSaved(pred)}
-                        >
-                          View
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="secondary"
-                          className="mr-2"
-                          onClick={() => handleShare(pred)}
-                        >
-                          Share
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="mr-2"
-                          onClick={() => handleDownloadPDF(pred, idx)}
-                        >
-                          Download PDF
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="destructive"
-                          onClick={() => handleDeleteSaved(idx)}
-                        >
-                          Delete
-                        </Button>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
-              </div>
-            )}
-          </>
-        )}
-
-        {step === 2 && (
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center">
-                <Calendar className="h-6 w-6 mr-2 text-blue-500" />
-                Medical History & Information
-              </CardTitle>
-              <CardDescription>Provide additional information for more accurate predictions</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="age">Age</Label>
-                  <Input id="age" type="number" placeholder="Enter your age" />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="gender">Gender</Label>
-                  <Input id="gender" placeholder="Male/Female/Other" />
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="conditions">Existing Medical Conditions</Label>
-                <Textarea
-                  id="conditions"
-                  placeholder="List any chronic conditions, allergies, or ongoing health issues..."
-                  rows={3}
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="medications">Current Medications</Label>
-                <Textarea id="medications" placeholder="List all medications you're currently taking..." rows={3} />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="family-history">Family Medical History</Label>
-                <Textarea id="family-history" placeholder="Any relevant family medical history..." rows={3} />
-              </div>
-
-              <div className="flex space-x-4">
-                <Button variant="outline" onClick={() => setStep(1)}>
-                  Back
-                </Button>
-                <Button onClick={handleAnalyze} className="flex-1">
-                  <Brain className="h-4 w-4 mr-2" />
-                  Analyze with AI
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Step 3: Prediction Results */}
-        {step === 3 && (
-          <div className="space-y-6">
-            {isAnalyzing ? (
-              <Card>
-                <CardContent className="p-8 text-center">
-                  <Brain className="h-16 w-16 text-blue-600 mx-auto mb-4 animate-pulse" />
-                  <h3 className="text-xl font-semibold mb-2">Analyzing Your Health Data</h3>
-                  <p className="text-gray-600 mb-4">
-                    Our AI is processing your symptoms, medical history, and real-time data...
-                  </p>
-                  <div className="w-full max-w-md mx-auto">
-                    <div className="h-2.5 bg-blue-200 rounded-full overflow-hidden relative">
-                      <div
-                        className="h-2.5 bg-blue-600 rounded-full animate-ripple absolute left-0 top-0"
-                        style={{ width: "100%" }}
-                      ></div>
+          {/* Step 3: Prediction Results */}
+          {step === 3 && (
+            <div className="space-y-6">
+              {isAnalyzing ? (
+                <Card>
+                  <CardContent className="p-8 text-center">
+                    <Brain className="h-16 w-16 text-blue-600 mx-auto mb-4 animate-pulse" />
+                    <h3 className="text-xl font-semibold mb-2">Analyzing Your Health Data</h3>
+                    <p className="text-gray-600 mb-4">
+                      Our AI is processing your symptoms, medical history, and real-time data...
+                    </p>
+                    <div className="w-full max-w-md mx-auto">
+                      <div className="h-2.5 bg-blue-200 rounded-full overflow-hidden relative">
+                        <div
+                          className="h-2.5 bg-blue-600 rounded-full animate-ripple absolute left-0 top-0"
+                          style={{ width: "100%" }}
+                        ></div>
+                      </div>
                     </div>
-                  </div>
-                  <style jsx global>{`
-                    @keyframes ripple {
-                      0% { transform: translateX(-100%); }
-                      100% { transform: translateX(100%); }
-                    }
-                    .animate-ripple {
-                      animation: ripple 1.2s linear infinite;
-                      width: 100%;
-                    }
-                  `}</style>
-                </CardContent>
-              </Card>
-            ) : (
-              prediction && (
-                <>
-                  {/* Primary Diagnosis */}
-                  <Card>
-                    <CardHeader>
-                      <CardTitle className="flex items-center justify-between">
-                        <span className="flex items-center">
-                          <Brain className="h-6 w-6 mr-2 text-blue-600" />
-                          AI Prediction Results
-                        </span>
-                        <Badge variant={prediction.riskLevel === "Low" ? "secondary" : "destructive"}>
-                          {prediction.riskLevel} Risk
-                        </Badge>
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="space-y-4">
-                        <div>
-                          <h3 className="text-lg font-semibold text-gray-900">
-                            Primary Diagnosis: {prediction.primaryDiagnosis}
-                          </h3>
-                          <div className="flex items-center mt-2">
-                            <span className="text-sm text-gray-600 mr-2">Confidence:</span>
-                            <Progress value={prediction.confidence} className="flex-1 max-w-xs" />
-                            <span className="text-sm font-medium ml-2">{prediction.confidence}%</span>
+                    <style jsx global>{`
+                      @keyframes ripple {
+                        0% { transform: translateX(-100%); }
+                        100% { transform: translateX(100%); }
+                      }
+                      .animate-ripple {
+                        animation: ripple 1.2s linear infinite;
+                        width: 100%;
+                      }
+                    `}</style>
+                  </CardContent>
+                </Card>
+              ) : (
+                prediction && (
+                  <>
+                    {/* Primary Diagnosis */}
+                    <Card>
+                      <CardHeader>
+                        <CardTitle className="flex items-center justify-between">
+                          <span className="flex items-center">
+                            <Brain className="h-6 w-6 mr-2 text-blue-600" />
+                            AI Prediction Results
+                          </span>
+                          <Badge variant={prediction.riskLevel === "Low" ? "secondary" : "destructive"}>
+                            {prediction.riskLevel} Risk
+                          </Badge>
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="space-y-4">
+                          <div>
+                            <h3 className="text-lg font-semibold text-gray-900">
+                              Primary Diagnosis: {prediction.primaryDiagnosis}
+                            </h3>
+                            <div className="flex items-center mt-2">
+                              <span className="text-sm text-gray-600 mr-2">Confidence:</span>
+                              <Progress value={prediction.confidence} className="flex-1 max-w-xs" />
+                              <span className="text-sm font-medium ml-2">{prediction.confidence}%</span>
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    </CardContent>
-                  </Card>
+                      </CardContent>
+                    </Card>
 
-                  <Card>
-                    <CardHeader>
-                      <CardTitle className="flex items-center">
-                        <AlertTriangle className="h-6 w-6 mr-2 text-yellow-600" />
-                        Possible Causes
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <ul className="space-y-2">
-                        {prediction?.possibleCauses?.map((cause: string, index: number) => (
-                          <li key={index} className="flex items-start">
-                            <span className="flex-shrink-0 w-6 h-6 bg-yellow-100 text-yellow-600 rounded-full flex items-center justify-center text-sm font-medium mr-3 mt-0.5">
-                              {index + 1}
-                            </span>
-                            <span>{cause}</span>
-                          </li>
-                        )) ?? (
-                          <li className="text-sm text-gray-500">No causes data available.</li>
-                        )}
-                      </ul>
-                    </CardContent>
-                  </Card>
+                    <Card>
+                      <CardHeader>
+                        <CardTitle className="flex items-center">
+                          <AlertTriangle className="h-6 w-6 mr-2 text-yellow-600" />
+                          Possible Causes
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <ul className="space-y-2">
+                          {prediction?.possibleCauses?.map((cause: string, index: number) => (
+                            <li key={index} className="flex items-start">
+                              <span className="flex-shrink-0 w-6 h-6 bg-yellow-100 text-yellow-600 rounded-full flex items-center justify-center text-sm font-medium mr-3 mt-0.5">
+                                {index + 1}
+                              </span>
+                              <span>{cause}</span>
+                            </li>
+                          )) ?? (
+                            <li className="text-sm text-gray-500">No causes data available.</li>
+                          )}
+                        </ul>
+                      </CardContent>
+                    </Card>
 
 
-                  {/* Future Predictions */}
-                  <Card>
-                    <CardHeader>
-                      <CardTitle className="flex items-center">
-                        <TrendingUp className="h-6 w-6 mr-2 text-green-600" />
-                        Future Health Outlook
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="grid md:grid-cols-2 gap-4">
-                        <div className="p-4 bg-green-50 rounded-lg">
-                          <h4 className="font-semibold text-green-800 mb-2">With Proper Treatment</h4>
-                          <p className="text-green-700">{prediction?.futureOutlook?.withTreatment}</p>
+                    {/* Future Predictions */}
+                    <Card>
+                      <CardHeader>
+                        <CardTitle className="flex items-center">
+                          <TrendingUp className="h-6 w-6 mr-2 text-green-600" />
+                          Future Health Outlook
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="grid md:grid-cols-2 gap-4">
+                          <div className="p-4 bg-green-50 rounded-lg">
+                            <h4 className="font-semibold text-green-800 mb-2">With Proper Treatment</h4>
+                            <p className="text-green-700">{prediction?.futureOutlook?.withTreatment}</p>
+                          </div>
+                          <div className="p-4 bg-red-50 rounded-lg">
+                            <h4 className="font-semibold text-red-800 mb-2">Without Treatment</h4>
+                            <p className="text-red-700">{prediction?.futureOutlook?.withoutTreatment}</p>
+                          </div>
                         </div>
-                        <div className="p-4 bg-red-50 rounded-lg">
-                          <h4 className="font-semibold text-red-800 mb-2">Without Treatment</h4>
-                          <p className="text-red-700">{prediction?.futureOutlook?.withoutTreatment}</p>
+                      </CardContent>
+                    </Card>
+
+                    {/* Recommendations */}
+                    <Card>
+                      <CardHeader>
+                        <CardTitle className="flex items-center">
+                          <Heart className="h-6 w-6 mr-2 text-red-500" />
+                          Treatment Recommendations
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <ul className="space-y-2">
+                          {prediction?.recommendations?.map((rec: string, index: number) => (
+                            <li key={index} className="flex items-start">
+                              <span className="flex-shrink-0 w-6 h-6 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-sm font-medium mr-3 mt-0.5">
+                                {index + 1}
+                              </span>
+                              <span>{rec}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </CardContent>
+                    </Card>
+
+                    {/* Suggested Tests */}
+                    <Card>
+                      <CardHeader>
+                        <CardTitle className="flex items-center">
+                          <Activity className="h-6 w-6 mr-2 text-purple-600" />
+                          Suggested Medical Tests
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="flex flex-wrap gap-2">
+                          {prediction?.suggestedTests?.map((test: string, index: number) => (
+                            <Badge key={index} variant="outline">
+                              {test}
+                            </Badge>
+                          ))}
                         </div>
-                      </div>
-                    </CardContent>
-                  </Card>
+                      </CardContent>
+                    </Card>
 
-                  {/* Recommendations */}
-                  <Card>
-                    <CardHeader>
-                      <CardTitle className="flex items-center">
-                        <Heart className="h-6 w-6 mr-2 text-red-500" />
-                        Treatment Recommendations
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <ul className="space-y-2">
-                        {prediction?.recommendations?.map((rec: string, index: number) => (
-                          <li key={index} className="flex items-start">
-                            <span className="flex-shrink-0 w-6 h-6 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-sm font-medium mr-3 mt-0.5">
-                              {index + 1}
-                            </span>
-                            <span>{rec}</span>
-                          </li>
-                        ))}
-                      </ul>
-                    </CardContent>
-                  </Card>
+                    <Card>
+                      <CardHeader>
+                        <CardTitle className="flex items-center">
+                          <Activity className="h-6 w-6 mr-2 text-green-600" />
+                          Food Recommendations
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="flex flex-wrap gap-2">
+                          {prediction?.foodRecommendations?.map((food: string, index: number) => (
+                            <Badge key={index} variant="outline">
+                              {food}
+                            </Badge>
+                          ))}
+                        </div>
+                      </CardContent>
+                    </Card>
 
-                  {/* Suggested Tests */}
-                  <Card>
-                    <CardHeader>
-                      <CardTitle className="flex items-center">
-                        <Activity className="h-6 w-6 mr-2 text-purple-600" />
-                        Suggested Medical Tests
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="flex flex-wrap gap-2">
-                        {prediction?.suggestedTests?.map((test: string, index: number) => (
-                          <Badge key={index} variant="outline">
-                            {test}
-                          </Badge>
-                        ))}
-                      </div>
-                    </CardContent>
-                  </Card>
+                    <Card>
+                      <CardHeader>
+                        <CardTitle className="flex items-center">
+                          <Activity className="h-6 w-6 mr-2 text-red-600" />
+                          Foods to Avoid
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="flex flex-wrap gap-2">
+                          {prediction?.foodsToAvoid?.map((food: string, index: number) => (
+                            <Badge key={index} variant="destructive">
+                              {food}
+                            </Badge>
+                          ))}
+                        </div>
+                      </CardContent>
+                    </Card>
 
-                  <Card>
-                    <CardHeader>
-                      <CardTitle className="flex items-center">
-                        <Activity className="h-6 w-6 mr-2 text-green-600" />
-                        Food Recommendations
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="flex flex-wrap gap-2">
-                        {prediction?.foodRecommendations?.map((food: string, index: number) => (
-                          <Badge key={index} variant="outline">
-                            {food}
-                          </Badge>
-                        ))}
-                      </div>
-                    </CardContent>
-                  </Card>
+                    <Card>
+                      <CardHeader>
+                        <CardTitle className="flex items-center">
+                          <Activity className="h-6 w-6 mr-2 text-blue-600" />
+                          Drugs or Medicines
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="flex flex-wrap gap-2">
+                          {prediction?.drugsOrMedicines?.map((drug: string, index: number) => (
+                            <Badge key={index} variant="secondary">
+                              {drug}
+                            </Badge>
+                          ))}
+                        </div>
+                      </CardContent>
+                    </Card>
 
-                  <Card>
-                    <CardHeader>
-                      <CardTitle className="flex items-center">
-                        <Activity className="h-6 w-6 mr-2 text-red-600" />
-                        Foods to Avoid
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="flex flex-wrap gap-2">
-                        {prediction?.foodsToAvoid?.map((food: string, index: number) => (
-                          <Badge key={index} variant="destructive">
-                            {food}
-                          </Badge>
-                        ))}
-                      </div>
-                    </CardContent>
-                  </Card>
-
-                  <Card>
-                    <CardHeader>
-                      <CardTitle className="flex items-center">
-                        <Activity className="h-6 w-6 mr-2 text-blue-600" />
-                        Drugs or Medicines
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="flex flex-wrap gap-2">
-                        {prediction?.drugsOrMedicines?.map((drug: string, index: number) => (
-                          <Badge key={index} variant="secondary">
-                            {drug}
-                          </Badge>
-                        ))}
-                      </div>
-                    </CardContent>
-                  </Card>
-
-                  <Card>
-                    <CardHeader>
-                      <CardTitle className="flex items-center">
-                        <Activity className="h-6 w-6 mr-2 text-amber-600" />
-                        Remedies
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="flex flex-wrap gap-2">
-                        {prediction?.remedies?.map((remedy: string, index: number) => (
-                          <Badge key={index} variant="outline">
-                            {remedy}
-                          </Badge>
-                        ))}
-                      </div>
-                    </CardContent>
-                  </Card>
+                    <Card>
+                      <CardHeader>
+                        <CardTitle className="flex items-center">
+                          <Activity className="h-6 w-6 mr-2 text-amber-600" />
+                          Remedies
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="flex flex-wrap gap-2">
+                          {prediction?.remedies?.map((remedy: string, index: number) => (
+                            <Badge key={index} variant="outline">
+                              {remedy}
+                            </Badge>
+                          ))}
+                        </div>
+                      </CardContent>
+                    </Card>
 
 
 
-                  {/* Action Buttons */}
-                  <div className="flex flex-col sm:flex-row gap-4">
-                    <Link href="/doctors" className="flex-1">
-                      <Button className="w-full">Find Doctors Near Me</Button>
-                    </Link>
-                    <Button
-                      variant="outline"
-                      onClick={() => {
-                        setStep(1)
-                        setPrediction(null)
-                        setShowSaved(false)
-                      }}
-                    >
-                      New Prediction
-                    </Button>
-                    {/* Show Save button only if not viewing saved */}
-                    {!showSaved && (
+                    {/* Action Buttons */}
+                    <div className="flex flex-col sm:flex-row gap-4">
+                      <Link href="/doctors" className="flex-1">
+                        <Button className="w-full">Find Doctors Near Me</Button>
+                      </Link>
                       <Button
-                        variant="default"
-                        onClick={handleSavePrediction}
+                        variant="outline"
+                        onClick={() => {
+                          setStep(1)
+                          setPrediction(null)
+                          setShowSaved(false)
+                        }}
                       >
-                        Save Prediction
+                        New Prediction
                       </Button>
-                    )}
-                  </div>
+                      {/* Show Save button only if not viewing saved */}
+                      {!showSaved && (
+                        <Button
+                          variant="default"
+                          onClick={handleSavePrediction}
+                        >
+                          Save Prediction
+                        </Button>
+                      )}
+                    </div>
 
-                  {/* Disclaimer */}
-                  <Card className="border-orange-200 bg-orange-50">
-                    <CardContent className="p-4">
-                      <div className="flex items-start">
-                        <AlertTriangle className="h-5 w-5 text-orange-600 mr-2 mt-0.5 flex-shrink-0" />
-                        <div className="text-sm text-orange-800">
-                          <strong>Medical Disclaimer:</strong> This AI prediction is for informational purposes only and
-                          should not replace professional medical advice. Please consult with a qualified healthcare
-                          provider for proper diagnosis and treatment.
+                    {/* Disclaimer */}
+                    <Card className="border-orange-200 bg-orange-50">
+                      <CardContent className="p-4">
+                        <div className="flex items-start">
+                          <AlertTriangle className="h-5 w-5 text-orange-600 mr-2 mt-0.5 flex-shrink-0" />
+                          <div className="text-sm text-orange-800">
+                            <strong>Medical Disclaimer:</strong> This AI prediction is for informational purposes only and
+                            should not replace professional medical advice. Please consult with a qualified healthcare
+                            provider for proper diagnosis and treatment.
+                          </div>
                         </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </>
-              )
-            )}
-          </div>
-        )}
+                      </CardContent>
+                    </Card>
+                  </>
+                )
+              )}
+            </div>
+          )}
+        </div>
       </div>
-    </div>
+    </Suspense>
   )
 }
