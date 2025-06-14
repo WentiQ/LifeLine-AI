@@ -1,14 +1,13 @@
 "use client"
 
 import type React from "react"
-
+import { useState, useRef, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { ArrowLeft, Bot, Send, User } from "lucide-react"
 import Link from "next/link"
-import { useState, useRef, useEffect } from "react"
 
 interface Message {
   role: "user" | "assistant"
@@ -24,14 +23,21 @@ export default function ChatPage() {
         "Hello! I'm LifeLine AI, your personal health assistant. How can I help you today? I can answer health questions, provide wellness tips, or help you understand medical information.",
       timestamp: new Date().toISOString(),
     },
+    {
+      role: "assistant",
+      content:
+        `Welcome! Please choose an option:\n\n1️⃣ App Help & Guide\n2️⃣ Chat for Medical Help\n\nReply with “App Help” or simply type your medical question to continue.`,
+      timestamp: new Date().toISOString(),
+    },
   ])
   const [inputMessage, setInputMessage] = useState("")
   const [isLoading, setIsLoading] = useState(false)
-  const scrollAreaRef = useRef<HTMLDivElement>(null)
+  const messagesEndRef = useRef<HTMLDivElement>(null)
 
+  // ✅ Auto-scroll to bottom on new message
   useEffect(() => {
-    if (scrollAreaRef.current) {
-      scrollAreaRef.current.scrollTop = scrollAreaRef.current.scrollHeight
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: "smooth" })
     }
   }, [messages])
 
@@ -56,7 +62,7 @@ export default function ChatPage() {
         },
         body: JSON.stringify({
           message: inputMessage,
-          conversationHistory: messages.slice(-10), // Last 10 messages for context
+          conversationHistory: messages.slice(-10),
           userContext: {
             timestamp: new Date().toISOString(),
             platform: "web",
@@ -98,9 +104,46 @@ export default function ChatPage() {
     }
   }
 
+  const handleSend = async () => {
+    if (!inputMessage.trim()) return
+
+    const userMsg: Message = {
+      role: "user",
+      content: inputMessage,
+      timestamp: new Date().toISOString(),
+    }
+    setMessages((prev) => [...prev, userMsg])
+    setInputMessage("")
+
+    const userMessages = messages.filter((m) => m.role === "user")
+    if (userMessages.length === 0) {
+      if (/app help/i.test(inputMessage)) {
+        setMessages((prev) => [
+          ...prev,
+          {
+            role: "assistant",
+            content: "Here's how to use the app: [Provide your app help instructions here.]",
+            timestamp: new Date().toISOString(),
+          },
+        ])
+      } else {
+        setMessages((prev) => [
+          ...prev,
+          {
+            role: "assistant",
+            content: "Thank you for your question. Please wait while I analyze your medical query...",
+            timestamp: new Date().toISOString(),
+          },
+        ])
+      }
+      return
+    }
+
+    // Normal AI response can be triggered here if needed
+  }
+
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
       <header className="bg-white shadow-sm border-b">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center py-4">
@@ -129,7 +172,7 @@ export default function ChatPage() {
           <CardContent className="flex-1 flex flex-col">
             {/* Messages Area */}
             <ScrollArea className="h-[400px] overflow-y-auto pr-4">
-              <div className="space-y-4 px-1" ref={scrollAreaRef}>
+              <div className="space-y-4 px-1">
                 {messages.map((message, index) => (
                   <div key={index} className={`flex ${message.role === "user" ? "justify-end" : "justify-start"}`}>
                     <div
@@ -170,6 +213,8 @@ export default function ChatPage() {
                     </div>
                   </div>
                 )}
+                {/* ✅ Auto-scroll anchor */}
+                <div ref={messagesEndRef} />
               </div>
             </ScrollArea>
 

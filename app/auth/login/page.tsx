@@ -20,11 +20,21 @@ export default function LoginPage() {
     e.preventDefault()
     setIsLoading(true)
 
-    // Simulate login process
-    await new Promise((resolve) => setTimeout(resolve, 1000))
+    const form = e.currentTarget as HTMLFormElement
+    const email = (form.elements.namedItem("email") as HTMLInputElement).value
+    const password = (form.elements.namedItem("password") as HTMLInputElement).value
 
-    // Redirect to dashboard
-    router.push("/dashboard")
+    const users = JSON.parse(localStorage.getItem("users") || "[]")
+    const user = users.find((u: any) => u.email === email && u.password === password)
+
+    if (user) {
+      // Save user info for session
+      localStorage.setItem("currentUser", JSON.stringify(user))
+      router.push("/dashboard")
+    } else {
+      alert("Invalid email or password.")
+    }
+    setIsLoading(false)
   }
 
   return (
@@ -42,13 +52,14 @@ export default function LoginPage() {
           <form onSubmit={handleLogin} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
-              <Input id="email" type="email" placeholder="Enter your email" required />
+              <Input id="email" name="email" type="email" placeholder="Enter your email" required />
             </div>
             <div className="space-y-2">
               <Label htmlFor="password">Password</Label>
               <div className="relative">
                 <Input
                   id="password"
+                  name="password"
                   type={showPassword ? "text" : "password"}
                   placeholder="Enter your password"
                   required

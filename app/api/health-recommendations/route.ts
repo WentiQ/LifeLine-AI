@@ -1,10 +1,9 @@
-import { type NextRequest, NextResponse } from "next/server"
-import { openai } from "@/lib/openai"
+import { type NextRequest, NextResponse } from "next/server";
 
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json()
-    const { userProfile, healthGoals, currentConditions } = body
+    const body = await request.json();
+    const { userProfile, healthGoals, currentConditions } = body;
 
     const prompt = `You are a health and wellness AI coach. Based on the following user profile, provide personalized health recommendations:
 
@@ -42,32 +41,41 @@ Please provide comprehensive health recommendations in the following JSON format
     "frequency": "Daily/Weekly/Monthly",
     "warningSigns": ["Warning sign 1", "Warning sign 2"]
   }
-}`
+}`;
 
-    const completion = await openai.chat.completions.create({
-      model: "deepseek/deepseek-r1-0528:free",
-      messages: [
-        {
-          role: "system",
-          content:
-            "You are a certified health and wellness coach providing personalized recommendations based on individual health profiles. Respond only with valid JSON.",
-        },
-        {
-          role: "user",
-          content: prompt,
-        },
-      ],
-      temperature: 0.4,
-      max_tokens: 1500,
-    })
+    const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer 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`,
+      },
+      body: JSON.stringify({
+        model: "deepseek/deepseek-r1-0528:free",
+        messages: [
+          {
+            role: "system",
+            content: "You are a certified health and wellness coach providing personalized recommendations based on individual health profiles. Respond only with valid JSON.",
+          },
+          {
+            role: "user",
+            content: prompt,
+          },
+        ],
+        temperature: 0.4,
+        max_tokens: 1500,
+      }),
+    });
 
-    const response = completion.choices[0].message.content
+    if (!response.ok) throw new Error("Failed to fetch from OpenRouter");
 
-    let recommendationsResult
+    const completion = await response.json();
+    const rawContent = completion.choices[0]?.message?.content;
+
+    let recommendationsResult;
     try {
-      const jsonMatch = response?.match(/\{[\s\S]*\}/)
-      const jsonString = jsonMatch ? jsonMatch[0] : response
-      recommendationsResult = JSON.parse(jsonString || "{}")
+      const jsonMatch = rawContent?.match(/\{[\s\S]*\}/);
+      const jsonString = jsonMatch ? jsonMatch[0] : rawContent;
+      recommendationsResult = JSON.parse(jsonString || "{}");
     } catch (error) {
       recommendationsResult = {
         dailyRoutine: {
@@ -142,12 +150,12 @@ Please provide comprehensive health recommendations in the following JSON format
             "Changes in appetite",
           ],
         },
-      }
+      };
     }
 
-    return NextResponse.json(recommendationsResult)
+    return NextResponse.json(recommendationsResult);
   } catch (error) {
-    console.error("Error generating health recommendations:", error)
+    console.error("Error generating health recommendations:", error);
     return NextResponse.json(
       {
         error: "Failed to generate recommendations",
@@ -165,6 +173,6 @@ Please provide comprehensive health recommendations in the following JSON format
         },
       },
       { status: 500 },
-    )
+    );
   }
 }

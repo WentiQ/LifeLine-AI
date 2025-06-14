@@ -1,17 +1,17 @@
-import { type NextRequest, NextResponse } from "next/server"
-import { openai } from "@/lib/openai"
+import { type NextRequest, NextResponse } from "next/server";
 
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json()
-    const { badHabits, currentHealth, lifestyle, timeframe } = body
+    const body = await request.json();
+    const { badHabits, currentHealth, lifestyle, habituationPeriod } = body;
 
+    // Compose prompt for the AI
     const prompt = `You are a predictive health AI. Based on the following information, predict future health outcomes and provide actionable advice:
 
 BAD HABITS: ${badHabits.join(", ")}
 CURRENT HEALTH STATUS: ${currentHealth}
 LIFESTYLE FACTORS: ${JSON.stringify(lifestyle)}
-PREDICTION TIMEFRAME: ${timeframe} (1 year, 5 years, 10 years)
+HABITUATION PERIOD: ${habituationPeriod} 
 
 Please provide comprehensive future health predictions in the following JSON format:
 {
@@ -66,33 +66,44 @@ Please provide comprehensive future health predictions in the following JSON for
     "ifContinue": "Consequences of continuing current habits",
     "reversibility": "Which effects can be reversed"
   }
-}`
+}`;
 
-    const completion = await openai.chat.completions.create({
-      model: "deepseek/deepseek-r1-0528:free",
-      messages: [
-        {
-          role: "system",
-          content:
-            "You are a predictive health AI specializing in long-term health outcomes based on lifestyle factors. Provide evidence-based predictions while emphasizing prevention and positive change. Respond only with valid JSON.",
-        },
-        {
-          role: "user",
-          content: prompt,
-        },
-      ],
-      temperature: 0.3,
-      max_tokens: 2000,
-    })
+    const completion = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization:
+          "Bearer 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",
+      },
+      body: JSON.stringify({
+        model: "deepseek/deepseek-r1-0528:free",
+        messages: [
+          {
+            role: "system",
+            content:
+              "You are a predictive health AI specializing in long-term health outcomes based on lifestyle factors. Provide evidence-based predictions while emphasizing prevention and positive change. Respond only with valid JSON.",
+          },
+          {
+            role: "user",
+            content: prompt,
+          },
+        ],
+        temperature: 0.3,
+        max_tokens: 2000,
+      }),
+    });
 
-    const response = completion.choices[0].message.content
+    const data = await completion.json();
+    const response = data.choices?.[0]?.message?.content;
 
-    let predictionsResult
+    let predictionsResult;
     try {
-      const jsonMatch = response?.match(/\{[\s\S]*\}/)
-      const jsonString = jsonMatch ? jsonMatch[0] : response
-      predictionsResult = JSON.parse(jsonString || "{}")
+      // Extract JSON from AI response (some LLMs add extra text)
+      const jsonMatch = response?.match(/\{[\s\S]*\}/);
+      const jsonString = jsonMatch ? jsonMatch[0] : response;
+      predictionsResult = JSON.parse(jsonString || "{}");
     } catch (error) {
+      // Fallback in case parsing fails, send generic predictions
       predictionsResult = {
         shortTerm: {
           timeframe: "1-2 years",
@@ -145,12 +156,12 @@ Please provide comprehensive future health predictions in the following JSON for
           ifContinue: "Progressive worsening of health outcomes",
           reversibility: "Many effects can be reversed with lifestyle changes",
         },
-      }
+      };
     }
 
-    return NextResponse.json(predictionsResult)
+    return NextResponse.json(predictionsResult);
   } catch (error) {
-    console.error("Error generating future predictions:", error)
-    return NextResponse.json({ error: "Failed to generate predictions" }, { status: 500 })
+    console.error("Error generating future predictions:", error);
+    return NextResponse.json({ error: "Failed to generate predictions" }, { status: 500 });
   }
 }

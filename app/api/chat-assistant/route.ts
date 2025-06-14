@@ -1,4 +1,5 @@
 import { type NextRequest, NextResponse } from "next/server"
+import { Message } from "postcss"
 
 export async function POST(request: NextRequest) {
   try {
@@ -9,13 +10,6 @@ export async function POST(request: NextRequest) {
     const isFirstUserMessage = conversationHistory.filter((msg: any) => msg.role === "user").length === 0
     const currentMode = userContext?.mode || null
 
-    // Initial greeting
-    if (isFirstUserMessage) {
-      return NextResponse.json({
-        response: `Welcome! Please choose an option:\n\n1️⃣ App Help & Guide\n2️⃣ Chat for Medical Help\n\nReply with “App Help” or “Medical Help” to continue.`,
-        timestamp: new Date().toISOString(),
-      })
-    }
 
     // App Help flow
     if (userMessage.includes("app help")) {
@@ -88,5 +82,74 @@ User Context (if any): ${JSON.stringify(userContext)}
       },
       { status: 500 },
     )
+  }
+}
+
+// Declare inputMessage and other required state variables at the top of your file or function scope
+let inputMessage = "";
+let isLoading = false;
+let messages: Message[] = [];
+const setMessages = (updater: (prev: Message[]) => Message[]) => { messages = updater(messages); };
+const setInputMessage = (msg: string) => { inputMessage = msg; };
+const setIsLoading = (loading: boolean) => { isLoading = loading; };
+
+const sendMessage = async () => {
+  if (!inputMessage.trim() || isLoading) return
+
+  const userMessage: Message = {
+    role: "user",
+    content: inputMessage,
+    timestamp: new Date().toISOString(),
+    type: "user", // Added required 'type' property
+  }
+
+  // Add the user message to the messages state immediately
+  setMessages((prev) => [...prev, userMessage])
+  setInputMessage("")
+  setIsLoading(true)
+
+  try {
+    // Prepare conversation history including the new user message
+    const conversationHistory = [...messages, userMessage].slice(-10)
+
+    const response = await fetch("/api/chat-assistant", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        message: inputMessage,
+        conversationHistory,
+        userContext: {
+          timestamp: new Date().toISOString(),
+          platform: "web",
+        },
+      }),
+    })
+
+    if (!response.ok) {
+      throw new Error("Failed to get response")
+    }
+
+    const data = await response.json()
+    const assistantMessage: Message = {
+      role: "assistant",
+      content: data.response,
+      timestamp: data.timestamp,
+      type: "assistant", // Added required 'type' property
+    }
+
+    setMessages((prev) => [...prev, assistantMessage])
+  } catch (error) {
+    const errorMessage: Message = {
+      role: "assistant",
+      content:
+        "I'm sorry, I'm having trouble responding right now. Please try again or consult with a healthcare professional if you have urgent medical concerns.",
+      timestamp: new Date().toISOString(),
+      type: "error", // Added required 'type' property
+    }
+    setMessages((prev) => [...prev, errorMessage])
+  } finally {
+    setIsLoading(false)
   }
 }

@@ -32,6 +32,12 @@ Please provide a detailed medical analysis in the following JSON format:
   "severity": "Mild/Moderate/Severe",
   "description": "Detailed explanation of the condition",
   "recommendations": ["Treatment recommendation 1", "Treatment recommendation 2"],
+  "possibleCauses": [
+    "Genetic predisposition",
+    "Lifestyle factors (e.g., poor diet)",
+    "Environmental triggers",
+    "...etc."
+  ],
   "futureOutlook": {
     "withTreatment": "Expected outcome with proper treatment",
     "withoutTreatment": "Potential complications without treatment"
@@ -47,7 +53,7 @@ Please provide a detailed medical analysis in the following JSON format:
 
   "foodRecommendations": ["Foods to eat 1", "Foods to eat 2"],
   "foodsToAvoid": ["Food to avoid 1", "Food to avoid 2"],
-  "medicines": ["Medicine 1", "Medicine 2"],
+  "drugsOrMedicines": ["Medicine 1", "Medicine 2"],
   "remedies": ["Remedy 1", "Remedy 2"]
 }
 
@@ -91,6 +97,13 @@ Important: This is for informational purposes only and should not replace profes
           "Maintain a healthy lifestyle with proper rest and nutrition",
           "Follow up if symptoms persist or worsen",
         ],
+        possibleCauses: [
+          "Genetic predisposition",
+          "Lifestyle factors (e.g., poor diet)",
+          "Environmental triggers",
+          "Infections or illnesses",
+          "Stress and mental health factors",
+        ],
         futureOutlook: {
           withTreatment:
             "With proper medical care and treatment, most conditions can be effectively managed",
@@ -123,7 +136,7 @@ Important: This is for informational purposes only and should not replace profes
           "Limit processed foods and sugary snacks",
           "Avoid excessive salt and fried foods",
         ],
-        medicines: [
+        drugsOrMedicines: [
           "Use medications prescribed by your healthcare provider",
           "Avoid self-medicating without professional advice",
         ],
@@ -148,6 +161,10 @@ Important: This is for informational purposes only and should not replace profes
             "Please consult with a healthcare professional",
             "Try the analysis again later",
           ],
+          possibleCauses: [
+            "Insufficient data for analysis",
+            "Error in processing the request",
+          ],
           futureOutlook: {
             withTreatment: "Professional medical evaluation recommended",
             withoutTreatment: "Symptoms should be evaluated by a doctor",
@@ -155,10 +172,13 @@ Important: This is for informational purposes only and should not replace profes
           suggestedTests: ["Complete medical examination"],
           urgency: "Consult healthcare provider",
 
-          foodRecommendations: [],
-          foodsToAvoid: [],
-          medicines: [],
-          remedies: [],
+          foodRecommendations: ["Better consult a nutritionist", "avoid self-diagnosing"],
+          foodsToAvoid: ["Better consult a nutritionist", "avoid self-diagnosing"],
+          drugsOrMedicines: [
+            'Better consult a healthcare provider for medication advice',
+            "Avoid self-medicating without professional advice",
+          ],
+          remedies: ['Better consult a healthcare provider for remedies', "Avoid self-medicating without professional advice"],
         },
       },
       { status: 500 },

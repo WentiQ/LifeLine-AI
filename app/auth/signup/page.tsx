@@ -12,22 +12,43 @@ import { Activity, Eye, EyeOff } from "lucide-react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useState } from "react"
+import { auth } from "@/lib/firebaseConfig"
+import { createUserWithEmailAndPassword } from "firebase/auth"
 
 export default function SignupPage() {
   const [showPassword, setShowPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [userType, setUserType] = useState("patient")
+  const [error, setError] = useState<string | null>(null)
   const router = useRouter()
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsLoading(true)
+    setError(null)
 
-    // Simulate signup process
-    await new Promise((resolve) => setTimeout(resolve, 1000))
+    const form = e.currentTarget as HTMLFormElement
+    const firstName = (form.elements.namedItem("firstName") as HTMLInputElement).value
+    const lastName = (form.elements.namedItem("lastName") as HTMLInputElement).value
+    const email = (form.elements.namedItem("email") as HTMLInputElement).value
+    const password = (form.elements.namedItem("password") as HTMLInputElement).value
 
-    // Redirect to dashboard
+    // Get existing users from localStorage
+    const users = JSON.parse(localStorage.getItem("users") || "[]")
+
+    // Check for duplicate email
+    if (users.some((u: any) => u.email === email)) {
+      setError("Email already exists. Please use a different email.")
+      setIsLoading(false)
+      return
+    }
+
+    // Save new user
+    users.push({ firstName, lastName, email, password, userType })
+    localStorage.setItem("users", JSON.stringify(users))
+
     router.push("/dashboard")
+    setIsLoading(false)
   }
 
   return (
@@ -46,17 +67,17 @@ export default function SignupPage() {
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="firstName">First Name</Label>
-                <Input id="firstName" placeholder="John" required />
+                <Input id="firstName" name="firstName" placeholder="John" required />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="lastName">Last Name</Label>
-                <Input id="lastName" placeholder="Doe" required />
+                <Input id="lastName" name="lastName" placeholder="Doe" required />
               </div>
             </div>
 
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
-              <Input id="email" type="email" placeholder="john@example.com" required />
+              <Input id="email" name="email" type="email" placeholder="john@example.com" required />
             </div>
 
             <div className="space-y-2">
@@ -64,6 +85,7 @@ export default function SignupPage() {
               <div className="relative">
                 <Input
                   id="password"
+                  name="password"
                   type={showPassword ? "text" : "password"}
                   placeholder="Create a strong password"
                   required
@@ -107,6 +129,8 @@ export default function SignupPage() {
                 </Link>
               </Label>
             </div>
+
+            {error && <div className="text-red-600 text-sm">{error}</div>}
 
             <Button type="submit" className="w-full" disabled={isLoading}>
               {isLoading ? "Creating Account..." : "Create Account"}

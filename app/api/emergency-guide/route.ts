@@ -1,12 +1,26 @@
-import { type NextRequest, NextResponse } from "next/server"
-import { openai } from "@/lib/openai"
+import { type NextRequest, NextResponse } from "next/server";
+import OpenAI from "openai";
+
+// --- OpenRouter AI Client Configuration ---
+// It's recommended to store your API key in an environment variable for security.
+// For example, in a .env.local file: OPENROUTER_API_KEY="your-key-here"
+// Then access it with: process.env.OPENROUTER_API_KEY
+const openrouter = new OpenAI({
+  baseURL: "https://openrouter.ai/api/v1",
+  apiKey: "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",
+  defaultHeaders: {
+    // Replace with your actual site URL and app name
+    "HTTP-Referer": "http://localhost:3000",
+    "X-Title": "Emergency Guide AI",
+  },
+});
 
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json()
-    const { condition, severity, location, availableResources } = body
+    const body = await request.json();
+    const { condition, severity, location, availableResources } = body;
 
-    const prompt = `You are an emergency medical guide AI. Provide immediate do's and don'ts for the following medical emergency or condition:
+    const prompt = `You are an emergency medical guide AI. Provide immediate do's and don'ts for the following medical emergency or condition(note : dont forget to give "warningSignsigns"):
 
 CONDITION/EMERGENCY: ${condition}
 SEVERITY: ${severity}
@@ -42,9 +56,9 @@ Please provide comprehensive emergency guidance in the following JSON format:
     }
   ],
   "warningSignsigns": {
-    "deterioration": ["Sign 1", "Sign 2"],
-    "improvement": ["Sign 1", "Sign 2"],
-    "whenToCall911": ["Condition 1", "Condition 2"]
+    "deterioration": ["Sign 1(eg : Loss of consciousness)", "Sign 2"],
+    "improvement": ["Sign 1(eg : Stable breathing)", "Sign 2"],
+    "whenToCall911": ["Condition 1(eg : Severe injury)", "Condition 2"]
   },
   "prevention": {
     "futureAvoidance": ["Prevention tip 1", "Prevention tip 2"],
@@ -63,9 +77,9 @@ Please provide comprehensive emergency guidance in the following JSON format:
       "instead": "What to do instead"
     }
   ]
-}`
+}`;
 
-    const completion = await openai.chat.completions.create({
+    const completion = await openrouter.chat.completions.create({
       model: "deepseek/deepseek-r1-0528:free",
       messages: [
         {
@@ -80,15 +94,15 @@ Please provide comprehensive emergency guidance in the following JSON format:
       ],
       temperature: 0.1,
       max_tokens: 2000,
-    })
+    });
 
-    const response = completion.choices[0].message.content
+    const response = completion.choices[0].message.content;
 
-    let guideResult
+    let guideResult;
     try {
-      const jsonMatch = response?.match(/\{[\s\S]*\}/)
-      const jsonString = jsonMatch ? jsonMatch[0] : response
-      guideResult = JSON.parse(jsonString || "{}")
+      const jsonMatch = response?.match(/\{[\s\S]*\}/);
+      const jsonString = jsonMatch ? jsonMatch[0] : response;
+      guideResult = JSON.parse(jsonString || "{}");
     } catch (error) {
       // Fallback emergency guide
       guideResult = {
@@ -164,12 +178,12 @@ Please provide comprehensive emergency guidance in the following JSON format:
             instead: "Call emergency services immediately",
           },
         ],
-      }
+      };
     }
 
-    return NextResponse.json(guideResult)
+    return NextResponse.json(guideResult);
   } catch (error) {
-    console.error("Error generating emergency guide:", error)
-    return NextResponse.json({ error: "Failed to generate emergency guide" }, { status: 500 })
+    console.error("Error generating emergency guide:", error);
+    return NextResponse.json({ error: "Failed to generate emergency guide" }, { status: 500 });
   }
 }
