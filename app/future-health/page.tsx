@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, SetStateAction, useEffect } from "react"
+import { useState, SetStateAction, useEffect, Suspense } from "react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -298,485 +298,487 @@ export default function FutureHealthPage() {
   }, [searchParams])
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <header className="bg-white shadow-sm border-b">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center py-4">
-            <Link href="/dashboard">
-              <Button variant="ghost" size="sm">
-                <ArrowLeft className="h-4 w-4 mr-2" />
-                Back to Dashboard
-              </Button>
-            </Link>
-            <div className="ml-4">
-              <h1 className="text-2xl font-bold text-gray-900">Future Health Predictions</h1>
-              <p className="text-gray-600">See how your habits may affect your future health</p>
-            </div>
-          </div>
-        </div>
-      </header>
-
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {isAnalyzing && !predictions ? (
-          <Card>
-            <CardContent className="p-8 text-center">
-              <TrendingDown className="h-16 w-16 text-red-600 mx-auto mb-4 animate-pulse" />
-              <h3 className="text-xl font-semibold mb-2">Analyzing Your Future Health</h3>
-              <p className="text-gray-600 mb-4">
-                Our AI is reviewing your habits and health info to predict your future health...
-              </p>
-              <div className="w-full max-w-md mx-auto">
-                <div className="h-2.5 bg-blue-200 rounded-full overflow-hidden">
-                  <div
-                    className="h-2.5 bg-blue-600 rounded-full animate-ripple"
-                    style={{ width: "100%" }}
-                  ></div>
-                </div>
-              </div>
-              <style jsx global>{`
-                @keyframes ripple {
-                  0% { transform: translateX(-100%); }
-                  100% { transform: translateX(100%); }
-                }
-                .animate-ripple {
-                  animation: ripple 1.2s linear infinite;
-                  width: 100%;
-                }
-              `}</style>
-            </CardContent>
-          </Card>
-        ) : !predictions ? (
-          <div className="space-y-8">
-        
-            {/* Bad Habits Selection */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center">
-                  <TrendingDown className="h-6 w-6 mr-2 text-red-600" />
-                  Current Bad Habits
-                </CardTitle>
-                <CardDescription>Select and add your current bad habits</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                  {commonBadHabits.map((habit) => (
-                    <div key={habit} className="flex items-center space-x-2">
-                      <Checkbox
-                        id={habit}
-                        checked={badHabits.includes(habit)}
-                        onCheckedChange={() => handleHabitToggle(habit)}
-                      />
-                      <Label htmlFor={habit} className="text-sm">{habit}</Label>
-                    </div>
-                  ))}
-                </div>
-                {/* Custom Habit Input */}
-                <div className="mt-6">
-                  <Label htmlFor="custom-habit">Add Custom Bad Habit</Label>
-                  <div className="flex gap-2 mt-2">
-                    <input
-                      id="custom-habit"
-                      type="text"
-                      className="border rounded px-3 py-2 w-full"
-                      placeholder="e.g. Late-night snacking"
-                      value={customHabit}
-                      onChange={(e) => setCustomHabit(e.target.value)}
-                    />
-                    <Button onClick={handleAddCustomHabit}>Add</Button>
-                    {habitAdded && (
-                      <Badge variant="default" className="ml-2 bg-green-500 text-white">
-                        Habit Added!
-                      </Badge>
-                    )}
-                    
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Health Info */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Current Health Information</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="current-health">Current Health Conditions</Label>
-                  <Textarea
-                    id="current-health"
-                    placeholder="Describe any current health conditions..."
-                    value={currentHealth}
-                    onChange={(e) => setCurrentHealth(e.target.value)}
-                    rows={3}
-                  />
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {/* Exercise */}
-                  <div className="space-y-2">
-                    <Label htmlFor="exercise">Exercise Level</Label>
-                    <Select value={exercise} onValueChange={setExercise}>
-                      <SelectTrigger id="exercise">
-                        <SelectValue placeholder="Select exercise level" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="none">No exercise</SelectItem>
-                        <SelectItem value="light">Light (1-2 times/week)</SelectItem>
-                        <SelectItem value="moderate">Moderate (3-4 times/week)</SelectItem>
-                        <SelectItem value="heavy">Heavy (5+ times/week)</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  {/* Diet */}
-                  <div className="space-y-2">
-                    <Label htmlFor="diet">Diet Quality</Label>
-                    <Select value={diet} onValueChange={setDiet}>
-                      <SelectTrigger id="diet">
-                        <SelectValue placeholder="Select diet quality" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="poor">Poor (fast food, processed)</SelectItem>
-                        <SelectItem value="fair">Fair (mixed healthy/unhealthy)</SelectItem>
-                        <SelectItem value="good">Good (mostly healthy)</SelectItem>
-                        <SelectItem value="excellent">Excellent (very healthy)</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  {/* Stress */}
-                  <div className="space-y-2">
-                    <Label htmlFor="stress">Stress Level</Label>
-                    <Select value={stress} onValueChange={setStress}>
-                      <SelectTrigger id="stress">
-                        <SelectValue placeholder="Select stress level" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="low">Low</SelectItem>
-                        <SelectItem value="moderate">Moderate</SelectItem>
-                        <SelectItem value="high">High</SelectItem>
-                        <SelectItem value="extreme">Extreme</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  {/* Sleep */}
-                  <div className="space-y-2">
-                    <Label htmlFor="sleep">Sleep Quality</Label>
-                    <Select value={sleep} onValueChange={setSleep}>
-                      <SelectTrigger id="sleep">
-                        <SelectValue placeholder="Select sleep quality" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="poor">Poor (less than 6 hours)</SelectItem>
-                        <SelectItem value="fair">Fair (6-7 hours)</SelectItem>
-                        <SelectItem value="good">Good (7-8 hours)</SelectItem>
-                        <SelectItem value="excellent">Excellent (8+ hours)</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="habituationPeriod">Habituation Period</Label>
-                  <Input
-                    id="habituationPeriod"
-                    type="text"
-                    placeholder="e.g., 6 months, 2 years"
-                    value={habituationPeriod}
-                    onChange={(e) => setHabituationPeriod(e.target.value)}
-                  />
-                </div>
-
-              </CardContent>
-            </Card>
-
-            {/* Predict Button */}
-            <div className="text-center">
-              <Button
-                onClick={generatePredictions}
-                size="lg"
-                disabled={
-                  isAnalyzing ||
-                  badHabits.length === 0 ||
-                  !exercise ||
-                  !diet ||
-                  !stress ||
-                  !sleep ||
-                  !habituationPeriod
-                }
-                className="px-8"
-              >
-                <Brain className="h-5 w-5 mr-2" />
-                Predict My Future Health
-              </Button>
-            </div>
-
-            {/* Saved Predictions - ONLY on first page, below the button */}
-            {savedPredictions.length > 0 && (
-              <div className="mt-6">
-                <h2 className="text-lg font-semibold mb-2">Saved Future Health Predictions</h2>
-                <div className="grid gap-4 md:grid-cols-2">
-                  {savedPredictions.map((pred, idx) => (
-                    <Card key={pred.id || idx} className="relative border-2 border-gray-200 shadow-sm bg-white">
-                      <CardContent className="py-4">
-                        <div className="mb-2 text-xs text-gray-500">
-                          Saved: {new Date(pred.savedAt).toLocaleString()}
-                        </div>
-                        <div className="font-bold mb-1">Most Dangerous Habit: {pred.predictions?.habitImpact?.mostDangerous}</div>
-                        <div className="mb-2 text-sm">
-                          Bad Habits: <span className="font-semibold">{pred.badHabits?.join(", ")}</span>
-                        </div>
-                        <Button
-                          size="sm"
-                          className="mr-2"
-                          onClick={() => {
-                            setPredictions(pred.predictions)
-                            setBadHabits(pred.badHabits)
-                            setCurrentHealth(pred.currentHealth)
-                            setHabituationPeriod(pred.habituationPeriod)
-                            setExercise(pred.exercise)
-                            setDiet(pred.diet)
-                            setStress(pred.stress)
-                            setSleep(pred.sleep)
-                            setShowSaved(true)
-                          }}
-                        >
-                          View
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="secondary"
-                          className="mr-2"
-                          onClick={() => handleShare(pred)}
-                        >
-                          Share
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="mr-2"
-                          onClick={() => handleDownloadPDF(pred, idx)}
-                        >
-                          Download PDF
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="destructive"
-                          onClick={() => handleDeleteSaved(idx)}
-                        >
-                          Delete
-                        </Button>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-        ) : (
-          <div className="space-y-8">
-            {/* Results display */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center">
-                  <AlertTriangle className="h-6 w-6 mr-2 text-orange-600" />
-                  Habit Impact Analysis
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid md:grid-cols-3 gap-6">
-                  <div className="p-4 bg-red-50 rounded-lg">
-                    <h4 className="font-semibold text-red-800 mb-2">Most Dangerous Habit</h4>
-                    <p className="text-red-700">{predictions.habitImpact?.mostDangerous}</p>
-                  </div>
-                  <div className="p-4 bg-orange-50 rounded-lg">
-                    <h4 className="font-semibold text-orange-800 mb-2">Immediate Risks</h4>
-                    <ul className="text-orange-700 text-sm space-y-1">
-                      {predictions.habitImpact.immediateRisks.map((risk: string, index: number) => (
-                        <li key={index}>• {risk}</li>
-                      ))}
-                    </ul>
-                  </div>
-                  <div className="p-4 bg-yellow-50 rounded-lg">
-                    <h4 className="font-semibold text-yellow-800 mb-2">Cumulative Effects</h4>
-                    <ul className="text-yellow-700 text-sm space-y-1">
-                      {predictions.habitImpact.cumulativeEffects.map((effect: string, index: number) => (
-                        <li key={index}>• {effect}</li>
-                      ))}
-                    </ul>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Timeline Predictions */}
-            <div className="grid gap-6">
-              {/* Short Term */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center">
-                    <Calendar className="h-6 w-6 mr-2 text-blue-600" />
-                    Short Term ({predictions.shortTerm.timeframe})
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    {predictions.shortTerm.predictions.map((prediction: any, index: number) => (
-                      <div key={index} className="border rounded-lg p-4">
-                        <div className="flex items-center justify-between mb-2">
-                          <h4 className="font-semibold">{prediction.condition}</h4>
-                          <div className="flex items-center space-x-2">
-                            <Badge variant={prediction.severity === "Severe" ? "destructive" : "secondary"}>
-                              {prediction.severity}
-                            </Badge>
-                            <span className="text-sm text-gray-600">{prediction.probability}% probability</span>
-                          </div>
-                        </div>
-                        <p className="text-gray-700 mb-3">{prediction.description}</p>
-                        <div>
-                          <h5 className="font-medium mb-2">Prevention Steps:</h5>
-                          <ul className="text-sm space-y-1">
-                            {prediction.preventionSteps.map((step: string, stepIndex: number) => (
-                              <li key={stepIndex} className="flex items-start">
-                                <span className="w-2 h-2 bg-green-500 rounded-full mt-2 mr-2 flex-shrink-0"></span>
-                                {step}
-                              </li>
-                            ))}
-                          </ul>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Medium Term */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center">
-                    <Calendar className="h-6 w-6 mr-2 text-orange-600" />
-                    Medium Term ({predictions.mediumTerm.timeframe})
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    {predictions.mediumTerm.predictions.map((prediction: any, index: number) => (
-                      <div key={index} className="border rounded-lg p-4">
-                        <div className="flex items-center justify-between mb-2">
-                          <h4 className="font-semibold">{prediction.condition}</h4>
-                          <div className="flex items-center space-x-2">
-                            <Badge variant={prediction.severity === "Severe" ? "destructive" : "secondary"}>
-                              {prediction.severity}
-                            </Badge>
-                            <span className="text-sm text-gray-600">{prediction.probability}% probability</span>
-                          </div>
-                        </div>
-                        <p className="text-gray-700 mb-3">{prediction.description}</p>
-                        <div>
-                          <h5 className="font-medium mb-2">Prevention Steps:</h5>
-                          <ul className="text-sm space-y-1">
-                            {prediction.preventionSteps.map((step: string, stepIndex: number) => (
-                              <li key={stepIndex} className="flex items-start">
-                                <span className="w-2 h-2 bg-green-500 rounded-full mt-2 mr-2 flex-shrink-0"></span>
-                                {step}
-                              </li>
-                            ))}
-                          </ul>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Long Term */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center">
-                    <Calendar className="h-6 w-6 mr-2 text-red-600" />
-                    Long Term ({predictions.longTerm.timeframe})
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    {predictions.longTerm.predictions.map((prediction: any, index: number) => (
-                      <div key={index} className="border rounded-lg p-4">
-                        <div className="flex items-center justify-between mb-2">
-                          <h4 className="font-semibold">{prediction.condition}</h4>
-                          <div className="flex items-center space-x-2">
-                            <Badge variant={prediction.severity === "Severe" ? "destructive" : "secondary"}>
-                              {prediction.severity}
-                            </Badge>
-                            <span className="text-sm text-gray-600">{prediction.probability}% probability</span>
-                          </div>
-                        </div>
-                        <p className="text-gray-700 mb-3">{prediction.description}</p>
-                        <div>
-                          <h5 className="font-medium mb-2">Prevention Steps:</h5>
-                          <ul className="text-sm space-y-1">
-                            {prediction.preventionSteps.map((step: string, stepIndex: number) => (
-                              <li key={stepIndex} className="flex items-start">
-                                <span className="w-2 h-2 bg-green-500 rounded-full mt-2 mr-2 flex-shrink-0"></span>
-                                {step}
-                              </li>
-                            ))}
-                          </ul>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-
-            {/* Risk Reduction */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center">
-                  <Target className="h-6 w-6 mr-2 text-green-600" />
-                  Risk Reduction Opportunities
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid md:grid-cols-2 gap-6">
-                  <div className="p-4 bg-green-50 rounded-lg">
-                    <h4 className="font-semibold text-green-800 mb-2">If You Quit Now</h4>
-                    <p className="text-green-700">{predictions.riskReduction.ifQuitNow}</p>
-                  </div>
-                  <div className="p-4 bg-red-50 rounded-lg">
-                    <h4 className="font-semibold text-red-800 mb-2">If You Continue</h4>
-                    <p className="text-red-700">{predictions.riskReduction.ifContinue}</p>
-                  </div>
-                </div>
-                <div className="mt-4 p-4 bg-blue-50 rounded-lg">
-                  <h4 className="font-semibold text-blue-800 mb-2">Reversibility</h4>
-                  <p className="text-blue-700">{predictions.riskReduction.reversibility}</p>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Action Buttons */}
-            <div className="flex flex-col sm:flex-row gap-4">
-              <Button onClick={() => setPredictions(null)} variant="outline">
-                Generate New Prediction
-              </Button>
-              <Link href="/health-coach" className="flex-1">
-                <Button className="w-full">Get Personalized Health Plan</Button>
+    <Suspense fallback={<div>Loading...</div>}>
+      <div className="min-h-screen bg-gray-50">
+        <header className="bg-white shadow-sm border-b">
+          <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex items-center py-4">
+              <Link href="/dashboard">
+                <Button variant="ghost" size="sm">
+                  <ArrowLeft className="h-4 w-4 mr-2" />
+                  Back to Dashboard
+                </Button>
               </Link>
+              <div className="ml-4">
+                <h1 className="text-2xl font-bold text-gray-900">Future Health Predictions</h1>
+                <p className="text-gray-600">See how your habits may affect your future health</p>
+              </div>
             </div>
-
-            {!showSaved && (
-              <Button
-                variant="default"
-                onClick={handleSavePrediction}
-              >
-                Save Prediction
-              </Button>
-            )}
           </div>
-        )}
+        </header>
+
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          {isAnalyzing && !predictions ? (
+            <Card>
+              <CardContent className="p-8 text-center">
+                <TrendingDown className="h-16 w-16 text-red-600 mx-auto mb-4 animate-pulse" />
+                <h3 className="text-xl font-semibold mb-2">Analyzing Your Future Health</h3>
+                <p className="text-gray-600 mb-4">
+                  Our AI is reviewing your habits and health info to predict your future health...
+                </p>
+                <div className="w-full max-w-md mx-auto">
+                  <div className="h-2.5 bg-blue-200 rounded-full overflow-hidden">
+                    <div
+                      className="h-2.5 bg-blue-600 rounded-full animate-ripple"
+                      style={{ width: "100%" }}
+                    ></div>
+                  </div>
+                </div>
+                <style jsx global>{`
+                  @keyframes ripple {
+                    0% { transform: translateX(-100%); }
+                    100% { transform: translateX(100%); }
+                  }
+                  .animate-ripple {
+                    animation: ripple 1.2s linear infinite;
+                    width: 100%;
+                  }
+                `}</style>
+              </CardContent>
+            </Card>
+          ) : !predictions ? (
+            <div className="space-y-8">
+          
+              {/* Bad Habits Selection */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center">
+                    <TrendingDown className="h-6 w-6 mr-2 text-red-600" />
+                    Current Bad Habits
+                  </CardTitle>
+                  <CardDescription>Select and add your current bad habits</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                    {commonBadHabits.map((habit) => (
+                      <div key={habit} className="flex items-center space-x-2">
+                        <Checkbox
+                          id={habit}
+                          checked={badHabits.includes(habit)}
+                          onCheckedChange={() => handleHabitToggle(habit)}
+                        />
+                        <Label htmlFor={habit} className="text-sm">{habit}</Label>
+                      </div>
+                    ))}
+                  </div>
+                  {/* Custom Habit Input */}
+                  <div className="mt-6">
+                    <Label htmlFor="custom-habit">Add Custom Bad Habit</Label>
+                    <div className="flex gap-2 mt-2">
+                      <input
+                        id="custom-habit"
+                        type="text"
+                        className="border rounded px-3 py-2 w-full"
+                        placeholder="e.g. Late-night snacking"
+                        value={customHabit}
+                        onChange={(e) => setCustomHabit(e.target.value)}
+                      />
+                      <Button onClick={handleAddCustomHabit}>Add</Button>
+                      {habitAdded && (
+                        <Badge variant="default" className="ml-2 bg-green-500 text-white">
+                          Habit Added!
+                        </Badge>
+                      )}
+                      
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Health Info */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Current Health Information</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="current-health">Current Health Conditions</Label>
+                    <Textarea
+                      id="current-health"
+                      placeholder="Describe any current health conditions..."
+                      value={currentHealth}
+                      onChange={(e) => setCurrentHealth(e.target.value)}
+                      rows={3}
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {/* Exercise */}
+                    <div className="space-y-2">
+                      <Label htmlFor="exercise">Exercise Level</Label>
+                      <Select value={exercise} onValueChange={setExercise}>
+                        <SelectTrigger id="exercise">
+                          <SelectValue placeholder="Select exercise level" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="none">No exercise</SelectItem>
+                          <SelectItem value="light">Light (1-2 times/week)</SelectItem>
+                          <SelectItem value="moderate">Moderate (3-4 times/week)</SelectItem>
+                          <SelectItem value="heavy">Heavy (5+ times/week)</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    {/* Diet */}
+                    <div className="space-y-2">
+                      <Label htmlFor="diet">Diet Quality</Label>
+                      <Select value={diet} onValueChange={setDiet}>
+                        <SelectTrigger id="diet">
+                          <SelectValue placeholder="Select diet quality" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="poor">Poor (fast food, processed)</SelectItem>
+                          <SelectItem value="fair">Fair (mixed healthy/unhealthy)</SelectItem>
+                          <SelectItem value="good">Good (mostly healthy)</SelectItem>
+                          <SelectItem value="excellent">Excellent (very healthy)</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    {/* Stress */}
+                    <div className="space-y-2">
+                      <Label htmlFor="stress">Stress Level</Label>
+                      <Select value={stress} onValueChange={setStress}>
+                        <SelectTrigger id="stress">
+                          <SelectValue placeholder="Select stress level" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="low">Low</SelectItem>
+                          <SelectItem value="moderate">Moderate</SelectItem>
+                          <SelectItem value="high">High</SelectItem>
+                          <SelectItem value="extreme">Extreme</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    {/* Sleep */}
+                    <div className="space-y-2">
+                      <Label htmlFor="sleep">Sleep Quality</Label>
+                      <Select value={sleep} onValueChange={setSleep}>
+                        <SelectTrigger id="sleep">
+                          <SelectValue placeholder="Select sleep quality" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="poor">Poor (less than 6 hours)</SelectItem>
+                          <SelectItem value="fair">Fair (6-7 hours)</SelectItem>
+                          <SelectItem value="good">Good (7-8 hours)</SelectItem>
+                          <SelectItem value="excellent">Excellent (8+ hours)</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="habituationPeriod">Habituation Period</Label>
+                    <Input
+                      id="habituationPeriod"
+                      type="text"
+                      placeholder="e.g., 6 months, 2 years"
+                      value={habituationPeriod}
+                      onChange={(e) => setHabituationPeriod(e.target.value)}
+                    />
+                  </div>
+
+                </CardContent>
+              </Card>
+
+              {/* Predict Button */}
+              <div className="text-center">
+                <Button
+                  onClick={generatePredictions}
+                  size="lg"
+                  disabled={
+                    isAnalyzing ||
+                    badHabits.length === 0 ||
+                    !exercise ||
+                    !diet ||
+                    !stress ||
+                    !sleep ||
+                    !habituationPeriod
+                  }
+                  className="px-8"
+                >
+                  <Brain className="h-5 w-5 mr-2" />
+                  Predict My Future Health
+                </Button>
+              </div>
+
+              {/* Saved Predictions - ONLY on first page, below the button */}
+              {savedPredictions.length > 0 && (
+                <div className="mt-6">
+                  <h2 className="text-lg font-semibold mb-2">Saved Future Health Predictions</h2>
+                  <div className="grid gap-4 md:grid-cols-2">
+                    {savedPredictions.map((pred, idx) => (
+                      <Card key={pred.id || idx} className="relative border-2 border-gray-200 shadow-sm bg-white">
+                        <CardContent className="py-4">
+                          <div className="mb-2 text-xs text-gray-500">
+                            Saved: {new Date(pred.savedAt).toLocaleString()}
+                          </div>
+                          <div className="font-bold mb-1">Most Dangerous Habit: {pred.predictions?.habitImpact?.mostDangerous}</div>
+                          <div className="mb-2 text-sm">
+                            Bad Habits: <span className="font-semibold">{pred.badHabits?.join(", ")}</span>
+                          </div>
+                          <Button
+                            size="sm"
+                            className="mr-2"
+                            onClick={() => {
+                              setPredictions(pred.predictions)
+                              setBadHabits(pred.badHabits)
+                              setCurrentHealth(pred.currentHealth)
+                              setHabituationPeriod(pred.habituationPeriod)
+                              setExercise(pred.exercise)
+                              setDiet(pred.diet)
+                              setStress(pred.stress)
+                              setSleep(pred.sleep)
+                              setShowSaved(true)
+                            }}
+                          >
+                            View
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="secondary"
+                            className="mr-2"
+                            onClick={() => handleShare(pred)}
+                          >
+                            Share
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="mr-2"
+                            onClick={() => handleDownloadPDF(pred, idx)}
+                          >
+                            Download PDF
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="destructive"
+                            onClick={() => handleDeleteSaved(idx)}
+                          >
+                            Delete
+                          </Button>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          ) : (
+            <div className="space-y-8">
+              {/* Results display */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center">
+                    <AlertTriangle className="h-6 w-6 mr-2 text-orange-600" />
+                    Habit Impact Analysis
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid md:grid-cols-3 gap-6">
+                    <div className="p-4 bg-red-50 rounded-lg">
+                      <h4 className="font-semibold text-red-800 mb-2">Most Dangerous Habit</h4>
+                      <p className="text-red-700">{predictions.habitImpact?.mostDangerous}</p>
+                    </div>
+                    <div className="p-4 bg-orange-50 rounded-lg">
+                      <h4 className="font-semibold text-orange-800 mb-2">Immediate Risks</h4>
+                      <ul className="text-orange-700 text-sm space-y-1">
+                        {predictions.habitImpact.immediateRisks.map((risk: string, index: number) => (
+                          <li key={index}>• {risk}</li>
+                        ))}
+                      </ul>
+                    </div>
+                    <div className="p-4 bg-yellow-50 rounded-lg">
+                      <h4 className="font-semibold text-yellow-800 mb-2">Cumulative Effects</h4>
+                      <ul className="text-yellow-700 text-sm space-y-1">
+                        {predictions.habitImpact.cumulativeEffects.map((effect: string, index: number) => (
+                          <li key={index}>• {effect}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Timeline Predictions */}
+              <div className="grid gap-6">
+                {/* Short Term */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center">
+                      <Calendar className="h-6 w-6 mr-2 text-blue-600" />
+                      Short Term ({predictions.shortTerm.timeframe})
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      {predictions.shortTerm.predictions.map((prediction: any, index: number) => (
+                        <div key={index} className="border rounded-lg p-4">
+                          <div className="flex items-center justify-between mb-2">
+                            <h4 className="font-semibold">{prediction.condition}</h4>
+                            <div className="flex items-center space-x-2">
+                              <Badge variant={prediction.severity === "Severe" ? "destructive" : "secondary"}>
+                                {prediction.severity}
+                              </Badge>
+                              <span className="text-sm text-gray-600">{prediction.probability}% probability</span>
+                            </div>
+                          </div>
+                          <p className="text-gray-700 mb-3">{prediction.description}</p>
+                          <div>
+                            <h5 className="font-medium mb-2">Prevention Steps:</h5>
+                            <ul className="text-sm space-y-1">
+                              {prediction.preventionSteps.map((step: string, stepIndex: number) => (
+                                <li key={stepIndex} className="flex items-start">
+                                  <span className="w-2 h-2 bg-green-500 rounded-full mt-2 mr-2 flex-shrink-0"></span>
+                                  {step}
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Medium Term */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center">
+                      <Calendar className="h-6 w-6 mr-2 text-orange-600" />
+                      Medium Term ({predictions.mediumTerm.timeframe})
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      {predictions.mediumTerm.predictions.map((prediction: any, index: number) => (
+                        <div key={index} className="border rounded-lg p-4">
+                          <div className="flex items-center justify-between mb-2">
+                            <h4 className="font-semibold">{prediction.condition}</h4>
+                            <div className="flex items-center space-x-2">
+                              <Badge variant={prediction.severity === "Severe" ? "destructive" : "secondary"}>
+                                {prediction.severity}
+                              </Badge>
+                              <span className="text-sm text-gray-600">{prediction.probability}% probability</span>
+                            </div>
+                          </div>
+                          <p className="text-gray-700 mb-3">{prediction.description}</p>
+                          <div>
+                            <h5 className="font-medium mb-2">Prevention Steps:</h5>
+                            <ul className="text-sm space-y-1">
+                              {prediction.preventionSteps.map((step: string, stepIndex: number) => (
+                                <li key={stepIndex} className="flex items-start">
+                                  <span className="w-2 h-2 bg-green-500 rounded-full mt-2 mr-2 flex-shrink-0"></span>
+                                  {step}
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Long Term */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center">
+                      <Calendar className="h-6 w-6 mr-2 text-red-600" />
+                      Long Term ({predictions.longTerm.timeframe})
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      {predictions.longTerm.predictions.map((prediction: any, index: number) => (
+                        <div key={index} className="border rounded-lg p-4">
+                          <div className="flex items-center justify-between mb-2">
+                            <h4 className="font-semibold">{prediction.condition}</h4>
+                            <div className="flex items-center space-x-2">
+                              <Badge variant={prediction.severity === "Severe" ? "destructive" : "secondary"}>
+                                {prediction.severity}
+                              </Badge>
+                              <span className="text-sm text-gray-600">{prediction.probability}% probability</span>
+                            </div>
+                          </div>
+                          <p className="text-gray-700 mb-3">{prediction.description}</p>
+                          <div>
+                            <h5 className="font-medium mb-2">Prevention Steps:</h5>
+                            <ul className="text-sm space-y-1">
+                              {prediction.preventionSteps.map((step: string, stepIndex: number) => (
+                                <li key={stepIndex} className="flex items-start">
+                                  <span className="w-2 h-2 bg-green-500 rounded-full mt-2 mr-2 flex-shrink-0"></span>
+                                  {step}
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* Risk Reduction */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center">
+                    <Target className="h-6 w-6 mr-2 text-green-600" />
+                    Risk Reduction Opportunities
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid md:grid-cols-2 gap-6">
+                    <div className="p-4 bg-green-50 rounded-lg">
+                      <h4 className="font-semibold text-green-800 mb-2">If You Quit Now</h4>
+                      <p className="text-green-700">{predictions.riskReduction.ifQuitNow}</p>
+                    </div>
+                    <div className="p-4 bg-red-50 rounded-lg">
+                      <h4 className="font-semibold text-red-800 mb-2">If You Continue</h4>
+                      <p className="text-red-700">{predictions.riskReduction.ifContinue}</p>
+                    </div>
+                  </div>
+                  <div className="mt-4 p-4 bg-blue-50 rounded-lg">
+                    <h4 className="font-semibold text-blue-800 mb-2">Reversibility</h4>
+                    <p className="text-blue-700">{predictions.riskReduction.reversibility}</p>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Action Buttons */}
+              <div className="flex flex-col sm:flex-row gap-4">
+                <Button onClick={() => setPredictions(null)} variant="outline">
+                  Generate New Prediction
+                </Button>
+                <Link href="/health-coach" className="flex-1">
+                  <Button className="w-full">Get Personalized Health Plan</Button>
+                </Link>
+              </div>
+
+              {!showSaved && (
+                <Button
+                  variant="default"
+                  onClick={handleSavePrediction}
+                >
+                  Save Prediction
+                </Button>
+              )}
+            </div>
+          )}
+        </div>
       </div>
-    </div>
+    </Suspense>
   )
 }

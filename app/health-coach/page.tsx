@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { ArrowLeft, Brain, Clock, Dumbbell, Heart, Moon, Salad, Target, TrendingUp, X } from "lucide-react"
 import Link from "next/link"
-import { useEffect, useState } from "react"
+import { Suspense, useEffect, useState } from "react"
 import { v4 as uuidv4 } from "uuid"
 import { useSearchParams } from "next/navigation"
 import { Progress } from "@/components/ui/progress"
@@ -354,485 +354,487 @@ export default function HealthCoachPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-white shadow-sm border-b">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center py-4">
-            <Link href="/dashboard">
-              <Button variant="ghost" size="sm">
-                <ArrowLeft className="h-4 w-4 mr-2" />
-                Back to Dashboard
-              </Button>
-            </Link>
-            <div className="ml-4">
-              <h1 className="text-2xl font-bold text-gray-900">AI Health Coach</h1>
-              <p className="text-gray-600">Get personalized health and wellness recommendations</p>
-            </div>
-          </div>
-        </div>
-      </header>
-
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {isGenerating && !recommendations ? (
-          <Card>
-            <CardContent className="p-8 text-center">
-              <Brain className="h-16 w-16 text-blue-600 mx-auto mb-4 animate-pulse" />
-              <h3 className="text-xl font-semibold mb-2">Generating Your Personalized Plan</h3>
-              <p className="text-gray-600 mb-4">
-                Our AI is analyzing your profile and goals to create a tailored health plan...
-              </p>
-              <div className="w-full max-w-md mx-auto">
-                <div className="h-2.5 bg-blue-200 rounded-full overflow-hidden relative">
-                  <div
-                    className="h-2.5 bg-blue-600 rounded-full animate-ripple absolute left-0 top-0"
-                    style={{ width: "100%" }}
-                  ></div>
-                </div>
-              </div>
-              <style jsx global>{`
-                @keyframes ripple {
-                  0% { transform: translateX(-100%); }
-                  100% { transform: translateX(100%); }
-                }
-                .animate-ripple {
-                  animation: ripple 1.2s linear infinite;
-                  width: 100%;
-                }
-              `}</style>
-            </CardContent>
-          </Card>
-        ) : !recommendations ? (
-          <>
-            <div className="space-y-8">
-              {/* User Profile */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center">
-                    <Target className="h-6 w-6 mr-2 text-blue-600" />
-                    Your Profile
-                  </CardTitle>
-                  <CardDescription>Tell us about yourself to get personalized recommendations</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="age">Age</Label>
-                      <Input
-                        id="age"
-                        type="number"
-                        placeholder="Enter your age"
-                        value={userProfile.age}
-                        onChange={(e) => setUserProfile({ ...userProfile, age: e.target.value })}
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="gender">Gender</Label>
-                      <Select
-                        value={userProfile.gender}
-                        onValueChange={(value) => setUserProfile({ ...userProfile, gender: value })}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select gender" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="male">Male</SelectItem>
-                          <SelectItem value="female">Female</SelectItem>
-                          <SelectItem value="other">Other</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="activity">Activity Level</Label>
-                      <Select
-                        value={userProfile.activityLevel}
-                        onValueChange={(value) => setUserProfile({ ...userProfile, activityLevel: value })}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select activity level" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="sedentary">Sedentary</SelectItem>
-                          <SelectItem value="light">Lightly Active</SelectItem>
-                          <SelectItem value="moderate">Moderately Active</SelectItem>
-                          <SelectItem value="very">Very Active</SelectItem>
-                          <SelectItem value="extra">Extremely Active</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Health Goals */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center">
-                    <TrendingUp className="h-6 w-6 mr-2 text-green-600" />
-                    Health Goals
-                  </CardTitle>
-                  <CardDescription>Select or add your health and wellness goals</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  {/* Display selected goals */}
-                  <div className="mb-4">
-                    {healthGoals.length > 0 && (
-                      <div className="flex flex-wrap gap-2">
-                        {healthGoals.map((goal) => (
-                          <Badge key={goal} variant="secondary" className="pl-3 pr-1 py-1 text-sm">
-                            {goal}
-                            <button
-                              onClick={() => handleRemoveGoal(goal)}
-                              className="ml-2 rounded-full hover:bg-gray-300 p-0.5"
-                            >
-                              <X className="h-3 w-3" />
-                            </button>
-                          </Badge>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Predefined goals */}
-                  <Label className="text-base">Choose from common goals</Label>
-                  <div className="grid grid-cols-2 md:grid-cols-3 gap-3 pt-2">
-                    {availableGoals.map((goal) => (
-                      <div key={goal} className="flex items-center space-x-2">
-                        <Checkbox
-                          id={goal}
-                          checked={healthGoals.includes(goal)}
-                          onCheckedChange={() => handleGoalToggle(goal)}
-                        />
-                        <Label htmlFor={goal} className="text-sm font-normal">
-                          {goal}
-                        </Label>
-                      </div>
-                    ))}
-                  </div>
-
-                  {/* Custom goal input */}
-                  <div className="mt-4 pt-4 border-t">
-                    <Label htmlFor="customGoal" className="text-base">Add a custom goal</Label>
-                    <div className="flex gap-2 mt-2">
-                      <Input
-                        id="customGoal"
-                        placeholder="e.g., Run a 5k"
-                        value={customGoal}
-                        onChange={(e) => setCustomGoal(e.target.value)}
-                        onKeyDown={(e) => e.key === "Enter" && handleAddCustomGoal()}
-                      />
-                      <Button onClick={handleAddCustomGoal} variant="outline">
-                        Add Goal
-                      </Button>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Current Conditions */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center">
-                    <Heart className="h-6 w-6 mr-2 text-red-600" />
-                    Current Health Conditions
-                  </CardTitle>
-                  <CardDescription>Select or add any current health conditions (optional)</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  {/* Display selected conditions */}
-                  <div className="mb-4">
-                    {currentConditions.length > 0 && (
-                      <div className="flex flex-wrap gap-2">
-                        {currentConditions.map((condition) => (
-                          <Badge key={condition} variant="secondary" className="pl-3 pr-1 py-1 text-sm">
-                            {condition}
-                            <button
-                              onClick={() => handleRemoveCondition(condition)}
-                              className="ml-2 rounded-full hover:bg-gray-300 p-0.5"
-                            >
-                              <X className="h-3 w-3" />
-                            </button>
-                          </Badge>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Predefined conditions */}
-                  <Label className="text-base">Choose from common conditions</Label>
-                  <div className="grid grid-cols-2 md:grid-cols-3 gap-3 pt-2">
-                    {commonConditions.map((condition) => (
-                      <div key={condition} className="flex items-center space-x-2">
-                        <Checkbox
-                          id={condition}
-                          checked={currentConditions.includes(condition)}
-                          onCheckedChange={() => handleConditionToggle(condition)}
-                        />
-                        <Label htmlFor={condition} className="text-sm font-normal">
-                          {condition}
-                        </Label>
-                      </div>
-                    ))}
-                  </div>
-
-                  {/* Custom condition input */}
-                  <div className="mt-4 pt-4 border-t">
-                    <Label htmlFor="customCondition" className="text-base">Add a custom condition</Label>
-                    <div className="flex gap-2 mt-2">
-                      <Input
-                        id="customCondition"
-                        placeholder="e.g., Seasonal allergies"
-                        value={customCondition}
-                        onChange={(e) => setCustomCondition(e.target.value)}
-                        onKeyDown={(e) => e.key === "Enter" && handleAddCustomCondition()}
-                      />
-                      <Button onClick={handleAddCustomCondition} variant="outline">
-                        Add Condition
-                      </Button>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Generate Button */}
-              <div className="text-center">
-                <Button
-                  onClick={generateRecommendations}
-                  size="lg"
-                  disabled={isGenerating || !userProfile.age || !userProfile.gender}
-                  className="px-8"
-                >
-                  <Brain className="h-5 w-5 mr-2" />
-                  Get My Personalized Plan
+    <Suspense fallback={<div>Loading...</div>}>
+      <div className="min-h-screen bg-gray-50">
+        {/* Header */}
+        <header className="bg-white shadow-sm border-b">
+          <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex items-center py-4">
+              <Link href="/dashboard">
+                <Button variant="ghost" size="sm">
+                  <ArrowLeft className="h-4 w-4 mr-2" />
+                  Back to Dashboard
                 </Button>
+              </Link>
+              <div className="ml-4">
+                <h1 className="text-2xl font-bold text-gray-900">AI Health Coach</h1>
+                <p className="text-gray-600">Get personalized health and wellness recommendations</p>
               </div>
-            </div>
-            {savedPlans.length > 0 && (
-              <div className="mt-6">
-                <h2 className="text-lg font-semibold mb-2">Saved Health Plans</h2>
-                <div className="grid gap-4 md:grid-cols-2">
-                  {savedPlans.map((plan, idx) => (
-                    <Card key={plan.id || idx} className="relative border-2 border-gray-200 shadow-sm bg-white">
-                      <CardContent className="py-4">
-                        <div className="mb-2 text-xs text-gray-500">
-                          Saved: {new Date(plan.savedAt).toLocaleString()}
-                        </div>
-                        <div className="font-bold mb-1">Goals: {plan.healthGoals?.join(", ")}</div>
-                        <div className="mb-2 text-sm">
-                          Age: <span className="font-semibold">{plan.userProfile?.age}</span>
-                        </div>
-                        <Button
-                          size="sm"
-                          className="mr-2"
-                          onClick={() => {
-                            setRecommendations(plan.recommendations)
-                            setUserProfile(plan.userProfile)
-                            setHealthGoals(plan.healthGoals)
-                            setCurrentConditions(plan.currentConditions)
-                          }}
-                        >
-                          View
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="secondary"
-                          className="mr-2"
-                          onClick={() => handleSharePlan(plan)}
-                        >
-                          Share
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="mr-2"
-                          onClick={() => handleDownloadPDF(plan, idx)}
-                        >
-                          Download PDF
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="destructive"
-                          onClick={() => handleDeletePlan(idx)}
-                        >
-                          Delete
-                        </Button>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
-              </div>
-            )}
-          </>
-        ) : (
-          <div className="space-y-8">
-            {/* Daily Routine */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center">
-                  <Clock className="h-6 w-6 mr-2 text-blue-600" />
-                  Your Daily Routine
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid md:grid-cols-3 gap-6">
-                  <div>
-                    <h4 className="font-semibold text-gray-900 mb-3">Morning</h4>
-                    <ul className="space-y-2">
-                      {recommendations.dailyRoutine.morning.map((item: string, index: number) => (
-                        <li key={index} className="flex items-start">
-                          <span className="flex-shrink-0 w-2 h-2 bg-blue-500 rounded-full mt-2 mr-3"></span>
-                          <span className="text-sm">{item}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                  <div>
-                    <h4 className="font-semibold text-gray-900 mb-3">Afternoon</h4>
-                    <ul className="space-y-2">
-                      {recommendations.dailyRoutine.afternoon.map((item: string, index: number) => (
-                        <li key={index} className="flex items-start">
-                          <span className="flex-shrink-0 w-2 h-2 bg-green-500 rounded-full mt-2 mr-3"></span>
-                          <span className="text-sm">{item}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                  <div>
-                    <h4 className="font-semibold text-gray-900 mb-3">Evening</h4>
-                    <ul className="space-y-2">
-                      {recommendations.dailyRoutine.evening.map((item: string, index: number) => (
-                        <li key={index} className="flex items-start">
-                          <span className="flex-shrink-0 w-2 h-2 bg-purple-500 rounded-full mt-2 mr-3"></span>
-                          <span className="text-sm">{item}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Nutrition */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center">
-                  <Salad className="h-6 w-6 mr-2 text-green-600" />
-                  Nutrition Plan
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid md:grid-cols-3 gap-6">
-                  <div>
-                    <h4 className="font-semibold text-gray-900 mb-3">General Recommendations</h4>
-                    <ul className="space-y-2">
-                      {recommendations.nutrition.recommendations.map((item: string, index: number) => (
-                        <li key={index} className="text-sm">
-                          {item}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                  <div>
-                    <h4 className="font-semibold text-gray-900 mb-3">Foods to Include</h4>
-                    <div className="flex flex-wrap gap-2">
-                      {recommendations.nutrition.foodsToInclude.map((food: string, index: number) => (
-                        <Badge key={index} variant="outline" className="text-green-700 border-green-300">
-                          {food}
-                        </Badge>
-                      ))}
-                    </div>
-                  </div>
-                  <div>
-                    <h4 className="font-semibold text-gray-900 mb-3">Foods to Limit</h4>
-                    <div className="flex flex-wrap gap-2">
-                      {recommendations.nutrition.foodsToAvoid.map((food: string, index: number) => (
-                        <Badge key={index} variant="outline" className="text-red-700 border-red-300">
-                          {food}
-                        </Badge>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Exercise Plan */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center">
-                  <Dumbbell className="h-6 w-6 mr-2 text-purple-600" />
-                  Exercise Plan
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid md:grid-cols-3 gap-6">
-                  <div>
-                    <h4 className="font-semibold text-gray-900 mb-3">Weekly Plan</h4>
-                    <ul className="space-y-2">
-                      {recommendations.exercise.weeklyPlan.map((exercise: string, index: number) => (
-                        <li key={index} className="text-sm">
-                          {exercise}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                  <div>
-                    <h4 className="font-semibold text-gray-900 mb-3">Duration</h4>
-                    <p className="text-sm">{recommendations.exercise.duration}</p>
-                  </div>
-                  <div>
-                    <h4 className="font-semibold text-gray-900 mb-3">Intensity</h4>
-                    <Badge variant="outline">{recommendations.exercise.intensity}</Badge>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Lifestyle */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center">
-                  <Moon className="h-6 w-6 mr-2 text-indigo-600" />
-                  Lifestyle Recommendations
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid md:grid-cols-2 gap-6">
-                  <div>
-                    <h4 className="font-semibold text-gray-900 mb-3">Sleep</h4>
-                    <ul className="space-y-2">
-                      {recommendations.lifestyle.sleepRecommendations.map((tip: string, index: number) => (
-                        <li key={index} className="text-sm">
-                          {tip}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                  <div>
-                    <h4 className="font-semibold text-gray-900 mb-3">Stress Management</h4>
-                    <ul className="space-y-2">
-                      {recommendations.lifestyle.stressManagement.map((tip: string, index: number) => (
-                        <li key={index} className="text-sm">
-                          {tip}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Action Buttons */}
-            <div className="flex flex-col sm:flex-row gap-4">
-              <Button onClick={() => setRecommendations(null)} variant="outline">
-                Generate New Plan
-              </Button>
-              <Button onClick={handleSavePlan}>Save to Health Profile</Button>
             </div>
           </div>
-        )}
-        
+        </header>
+
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          {isGenerating && !recommendations ? (
+            <Card>
+              <CardContent className="p-8 text-center">
+                <Brain className="h-16 w-16 text-blue-600 mx-auto mb-4 animate-pulse" />
+                <h3 className="text-xl font-semibold mb-2">Generating Your Personalized Plan</h3>
+                <p className="text-gray-600 mb-4">
+                  Our AI is analyzing your profile and goals to create a tailored health plan...
+                </p>
+                <div className="w-full max-w-md mx-auto">
+                  <div className="h-2.5 bg-blue-200 rounded-full overflow-hidden relative">
+                    <div
+                      className="h-2.5 bg-blue-600 rounded-full animate-ripple absolute left-0 top-0"
+                      style={{ width: "100%" }}
+                    ></div>
+                  </div>
+                </div>
+                <style jsx global>{`
+                  @keyframes ripple {
+                    0% { transform: translateX(-100%); }
+                    100% { transform: translateX(100%); }
+                  }
+                  .animate-ripple {
+                    animation: ripple 1.2s linear infinite;
+                    width: 100%;
+                  }
+                `}</style>
+              </CardContent>
+            </Card>
+          ) : !recommendations ? (
+            <>
+              <div className="space-y-8">
+                {/* User Profile */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center">
+                      <Target className="h-6 w-6 mr-2 text-blue-600" />
+                      Your Profile
+                    </CardTitle>
+                    <CardDescription>Tell us about yourself to get personalized recommendations</CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="age">Age</Label>
+                        <Input
+                          id="age"
+                          type="number"
+                          placeholder="Enter your age"
+                          value={userProfile.age}
+                          onChange={(e) => setUserProfile({ ...userProfile, age: e.target.value })}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="gender">Gender</Label>
+                        <Select
+                          value={userProfile.gender}
+                          onValueChange={(value) => setUserProfile({ ...userProfile, gender: value })}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select gender" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="male">Male</SelectItem>
+                            <SelectItem value="female">Female</SelectItem>
+                            <SelectItem value="other">Other</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="activity">Activity Level</Label>
+                        <Select
+                          value={userProfile.activityLevel}
+                          onValueChange={(value) => setUserProfile({ ...userProfile, activityLevel: value })}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select activity level" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="sedentary">Sedentary</SelectItem>
+                            <SelectItem value="light">Lightly Active</SelectItem>
+                            <SelectItem value="moderate">Moderately Active</SelectItem>
+                            <SelectItem value="very">Very Active</SelectItem>
+                            <SelectItem value="extra">Extremely Active</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Health Goals */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center">
+                      <TrendingUp className="h-6 w-6 mr-2 text-green-600" />
+                      Health Goals
+                    </CardTitle>
+                    <CardDescription>Select or add your health and wellness goals</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    {/* Display selected goals */}
+                    <div className="mb-4">
+                      {healthGoals.length > 0 && (
+                        <div className="flex flex-wrap gap-2">
+                          {healthGoals.map((goal) => (
+                            <Badge key={goal} variant="secondary" className="pl-3 pr-1 py-1 text-sm">
+                              {goal}
+                              <button
+                                onClick={() => handleRemoveGoal(goal)}
+                                className="ml-2 rounded-full hover:bg-gray-300 p-0.5"
+                              >
+                                <X className="h-3 w-3" />
+                              </button>
+                            </Badge>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Predefined goals */}
+                    <Label className="text-base">Choose from common goals</Label>
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-3 pt-2">
+                      {availableGoals.map((goal) => (
+                        <div key={goal} className="flex items-center space-x-2">
+                          <Checkbox
+                            id={goal}
+                            checked={healthGoals.includes(goal)}
+                            onCheckedChange={() => handleGoalToggle(goal)}
+                          />
+                          <Label htmlFor={goal} className="text-sm font-normal">
+                            {goal}
+                          </Label>
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* Custom goal input */}
+                    <div className="mt-4 pt-4 border-t">
+                      <Label htmlFor="customGoal" className="text-base">Add a custom goal</Label>
+                      <div className="flex gap-2 mt-2">
+                        <Input
+                          id="customGoal"
+                          placeholder="e.g., Run a 5k"
+                          value={customGoal}
+                          onChange={(e) => setCustomGoal(e.target.value)}
+                          onKeyDown={(e) => e.key === "Enter" && handleAddCustomGoal()}
+                        />
+                        <Button onClick={handleAddCustomGoal} variant="outline">
+                          Add Goal
+                        </Button>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Current Conditions */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center">
+                      <Heart className="h-6 w-6 mr-2 text-red-600" />
+                      Current Health Conditions
+                    </CardTitle>
+                    <CardDescription>Select or add any current health conditions (optional)</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    {/* Display selected conditions */}
+                    <div className="mb-4">
+                      {currentConditions.length > 0 && (
+                        <div className="flex flex-wrap gap-2">
+                          {currentConditions.map((condition) => (
+                            <Badge key={condition} variant="secondary" className="pl-3 pr-1 py-1 text-sm">
+                              {condition}
+                              <button
+                                onClick={() => handleRemoveCondition(condition)}
+                                className="ml-2 rounded-full hover:bg-gray-300 p-0.5"
+                              >
+                                <X className="h-3 w-3" />
+                              </button>
+                            </Badge>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Predefined conditions */}
+                    <Label className="text-base">Choose from common conditions</Label>
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-3 pt-2">
+                      {commonConditions.map((condition) => (
+                        <div key={condition} className="flex items-center space-x-2">
+                          <Checkbox
+                            id={condition}
+                            checked={currentConditions.includes(condition)}
+                            onCheckedChange={() => handleConditionToggle(condition)}
+                          />
+                          <Label htmlFor={condition} className="text-sm font-normal">
+                            {condition}
+                          </Label>
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* Custom condition input */}
+                    <div className="mt-4 pt-4 border-t">
+                      <Label htmlFor="customCondition" className="text-base">Add a custom condition</Label>
+                      <div className="flex gap-2 mt-2">
+                        <Input
+                          id="customCondition"
+                          placeholder="e.g., Seasonal allergies"
+                          value={customCondition}
+                          onChange={(e) => setCustomCondition(e.target.value)}
+                          onKeyDown={(e) => e.key === "Enter" && handleAddCustomCondition()}
+                        />
+                        <Button onClick={handleAddCustomCondition} variant="outline">
+                          Add Condition
+                        </Button>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Generate Button */}
+                <div className="text-center">
+                  <Button
+                    onClick={generateRecommendations}
+                    size="lg"
+                    disabled={isGenerating || !userProfile.age || !userProfile.gender}
+                    className="px-8"
+                  >
+                    <Brain className="h-5 w-5 mr-2" />
+                    Get My Personalized Plan
+                  </Button>
+                </div>
+              </div>
+              {savedPlans.length > 0 && (
+                <div className="mt-6">
+                  <h2 className="text-lg font-semibold mb-2">Saved Health Plans</h2>
+                  <div className="grid gap-4 md:grid-cols-2">
+                    {savedPlans.map((plan, idx) => (
+                      <Card key={plan.id || idx} className="relative border-2 border-gray-200 shadow-sm bg-white">
+                        <CardContent className="py-4">
+                          <div className="mb-2 text-xs text-gray-500">
+                            Saved: {new Date(plan.savedAt).toLocaleString()}
+                          </div>
+                          <div className="font-bold mb-1">Goals: {plan.healthGoals?.join(", ")}</div>
+                          <div className="mb-2 text-sm">
+                            Age: <span className="font-semibold">{plan.userProfile?.age}</span>
+                          </div>
+                          <Button
+                            size="sm"
+                            className="mr-2"
+                            onClick={() => {
+                              setRecommendations(plan.recommendations)
+                              setUserProfile(plan.userProfile)
+                              setHealthGoals(plan.healthGoals)
+                              setCurrentConditions(plan.currentConditions)
+                            }}
+                          >
+                            View
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="secondary"
+                            className="mr-2"
+                            onClick={() => handleSharePlan(plan)}
+                          >
+                            Share
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="mr-2"
+                            onClick={() => handleDownloadPDF(plan, idx)}
+                          >
+                            Download PDF
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="destructive"
+                            onClick={() => handleDeletePlan(idx)}
+                          >
+                            Delete
+                          </Button>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </>
+          ) : (
+            <div className="space-y-8">
+              {/* Daily Routine */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center">
+                    <Clock className="h-6 w-6 mr-2 text-blue-600" />
+                    Your Daily Routine
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid md:grid-cols-3 gap-6">
+                    <div>
+                      <h4 className="font-semibold text-gray-900 mb-3">Morning</h4>
+                      <ul className="space-y-2">
+                        {recommendations.dailyRoutine.morning.map((item: string, index: number) => (
+                          <li key={index} className="flex items-start">
+                            <span className="flex-shrink-0 w-2 h-2 bg-blue-500 rounded-full mt-2 mr-3"></span>
+                            <span className="text-sm">{item}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                    <div>
+                      <h4 className="font-semibold text-gray-900 mb-3">Afternoon</h4>
+                      <ul className="space-y-2">
+                        {recommendations.dailyRoutine.afternoon.map((item: string, index: number) => (
+                          <li key={index} className="flex items-start">
+                            <span className="flex-shrink-0 w-2 h-2 bg-green-500 rounded-full mt-2 mr-3"></span>
+                            <span className="text-sm">{item}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                    <div>
+                      <h4 className="font-semibold text-gray-900 mb-3">Evening</h4>
+                      <ul className="space-y-2">
+                        {recommendations.dailyRoutine.evening.map((item: string, index: number) => (
+                          <li key={index} className="flex items-start">
+                            <span className="flex-shrink-0 w-2 h-2 bg-purple-500 rounded-full mt-2 mr-3"></span>
+                            <span className="text-sm">{item}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Nutrition */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center">
+                    <Salad className="h-6 w-6 mr-2 text-green-600" />
+                    Nutrition Plan
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid md:grid-cols-3 gap-6">
+                    <div>
+                      <h4 className="font-semibold text-gray-900 mb-3">General Recommendations</h4>
+                      <ul className="space-y-2">
+                        {recommendations.nutrition.recommendations.map((item: string, index: number) => (
+                          <li key={index} className="text-sm">
+                            {item}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                    <div>
+                      <h4 className="font-semibold text-gray-900 mb-3">Foods to Include</h4>
+                      <div className="flex flex-wrap gap-2">
+                        {recommendations.nutrition.foodsToInclude.map((food: string, index: number) => (
+                          <Badge key={index} variant="outline" className="text-green-700 border-green-300">
+                            {food}
+                          </Badge>
+                        ))}
+                      </div>
+                    </div>
+                    <div>
+                      <h4 className="font-semibold text-gray-900 mb-3">Foods to Limit</h4>
+                      <div className="flex flex-wrap gap-2">
+                        {recommendations.nutrition.foodsToAvoid.map((food: string, index: number) => (
+                          <Badge key={index} variant="outline" className="text-red-700 border-red-300">
+                            {food}
+                          </Badge>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Exercise Plan */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center">
+                    <Dumbbell className="h-6 w-6 mr-2 text-purple-600" />
+                    Exercise Plan
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid md:grid-cols-3 gap-6">
+                    <div>
+                      <h4 className="font-semibold text-gray-900 mb-3">Weekly Plan</h4>
+                      <ul className="space-y-2">
+                        {recommendations.exercise.weeklyPlan.map((exercise: string, index: number) => (
+                          <li key={index} className="text-sm">
+                            {exercise}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                    <div>
+                      <h4 className="font-semibold text-gray-900 mb-3">Duration</h4>
+                      <p className="text-sm">{recommendations.exercise.duration}</p>
+                    </div>
+                    <div>
+                      <h4 className="font-semibold text-gray-900 mb-3">Intensity</h4>
+                      <Badge variant="outline">{recommendations.exercise.intensity}</Badge>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Lifestyle */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center">
+                    <Moon className="h-6 w-6 mr-2 text-indigo-600" />
+                    Lifestyle Recommendations
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid md:grid-cols-2 gap-6">
+                    <div>
+                      <h4 className="font-semibold text-gray-900 mb-3">Sleep</h4>
+                      <ul className="space-y-2">
+                        {recommendations.lifestyle.sleepRecommendations.map((tip: string, index: number) => (
+                          <li key={index} className="text-sm">
+                            {tip}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                    <div>
+                      <h4 className="font-semibold text-gray-900 mb-3">Stress Management</h4>
+                      <ul className="space-y-2">
+                        {recommendations.lifestyle.stressManagement.map((tip: string, index: number) => (
+                          <li key={index} className="text-sm">
+                            {tip}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Action Buttons */}
+              <div className="flex flex-col sm:flex-row gap-4">
+                <Button onClick={() => setRecommendations(null)} variant="outline">
+                  Generate New Plan
+                </Button>
+                <Button onClick={handleSavePlan}>Save to Health Profile</Button>
+              </div>
+            </div>
+          )}
+          
+        </div>
       </div>
-    </div>
+    </Suspense>
   )
 }
