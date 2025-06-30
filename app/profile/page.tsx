@@ -62,6 +62,21 @@ export default function ProfilePage() {
     twoFactorAuth: false,
   })
 
+  // Add plan state
+  const [plan, setPlan] = useState<"free" | "premium">("free")
+
+  // Load plan from localStorage on mount
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const user = JSON.parse(localStorage.getItem("currentUser") || "{}")
+      setPlan(user.plan === "premium" ? "premium" : "free")
+      setProfileData((prev) => ({
+        ...prev,
+        ...user,
+      }))
+    }
+  }, [])
+
   const handleProfileChange = (field: string, value: string) => {
     setProfileData((prev) => ({
       ...prev,
@@ -83,6 +98,16 @@ export default function ProfilePage() {
     }))
   }
 
+  // Helper to update plan in localStorage and state
+  const updatePlan = (newPlan: "free" | "premium") => {
+    setPlan(newPlan)
+    if (typeof window !== "undefined") {
+      const user = JSON.parse(localStorage.getItem("currentUser") || "{}")
+      user.plan = newPlan
+      localStorage.setItem("currentUser", JSON.stringify(user))
+    }
+  }
+
   const handleSaveProfile = async () => {
     setIsSaving(true)
 
@@ -99,6 +124,39 @@ export default function ProfilePage() {
     // Show success message
     alert("Profile updated successfully!")
   }
+
+  // Plan switcher UI
+  const renderPlanSection = () => (
+    <Card className="mb-6">
+      <CardHeader>
+        <CardTitle>Subscription Plan</CardTitle>
+        <CardDescription>
+          {plan === "premium"
+            ? "You have access to all premium features."
+            : "Upgrade to premium for full AI-powered predictions."}
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        <div className="flex items-center gap-4">
+          <span className={`font-semibold ${plan === "premium" ? "text-green-600" : "text-blue-600"}`}>
+            {plan === "premium" ? "Premium Plan" : "Free Plan"}
+          </span>
+          {plan === "free" ? (
+            <Button onClick={() => updatePlan("premium")}>Buy Premium</Button>
+          ) : (
+            <>
+              <Button variant="secondary" onClick={() => updatePlan("free")}>
+                Switch to Free
+              </Button>
+              <Button variant="destructive" onClick={() => updatePlan("free")}>
+                Deactivate Premium
+              </Button>
+            </>
+          )}
+        </div>
+      </CardContent>
+    </Card>
+  )
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -121,6 +179,9 @@ export default function ProfilePage() {
       </header>
 
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Add plan section here */}
+        {renderPlanSection()}
+
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {/* Profile Summary Card */}
           <div className="md:col-span-1">

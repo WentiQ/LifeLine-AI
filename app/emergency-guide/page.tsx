@@ -795,8 +795,10 @@ export default function EmergencyGuidePage() {
                 Get Guide for Different Emergency
               </Button>
               <Button className="bg-red-600 hover:bg-red-700">
+                <a href="tel:7032983348">
                 <Phone className="h-4 w-4 mr-2" />
-                Call Emergency Services (112)
+                Call Emergency Services (7032983348)
+                </a>
               </Button>
             </div>
 

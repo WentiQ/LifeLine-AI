@@ -24,11 +24,31 @@ import { useEffect, useState, useRef } from "react"
 import { Loader2 } from "lucide-react"
 // import ChatAssistantBubble from "@/components/ChatAssistantBubble"
 
+type ActivityItem = {
+  type: "prediction" | "photo" | "medication" | string
+  title: string
+  description: string
+  icon: string // e.g. "Brain", "Camera", "Pill"
+  timestamp: number
+}
+
+function saveActivity(activity: ActivityItem) {
+  const activities = JSON.parse(localStorage.getItem("recentActivities") || "[]")
+  activities.unshift(activity)
+  // Keep only the latest 20
+  localStorage.setItem("recentActivities", JSON.stringify(activities.slice(0, 20)))
+}
+
+function loadActivities(): ActivityItem[] {
+  return JSON.parse(localStorage.getItem("recentActivities") || "[]")
+}
+
 export default function DashboardPage() {
   const router = useRouter()
   const [userName, setUserName] = useState("")
   const [isPageLoading, setIsPageLoading] = useState(true)
   const [isNavigating, setIsNavigating] = useState(false)
+  const [activities, setActivities] = useState<ActivityItem[]>([])
   const hasMounted = useRef(false)
 
   useEffect(() => {
@@ -50,6 +70,17 @@ export default function DashboardPage() {
         setUserName(user.firstName ? user.firstName : "User")
       }
     }
+  }, [])
+
+  useEffect(() => {
+    setActivities(loadActivities())
+  }, [])
+
+  // Optionally, listen for storage events to update in real time across tabs
+  useEffect(() => {
+    const onStorage = () => setActivities(loadActivities())
+    window.addEventListener("storage", onStorage)
+    return () => window.removeEventListener("storage", onStorage)
   }, [])
 
   useEffect(() => {
@@ -313,6 +344,16 @@ export default function DashboardPage() {
               </CardHeader>
             </Card>
           </div>
+
+          <div onClick={() => handleNavigate("/interactive-health-exercises")} className="cursor-pointer">
+            <Card className="hover:shadow-lg transition-shadow">
+              <CardHeader>
+                <Activity className="h-10 w-10 text-yellow-600 mb-2" />
+                <CardTitle>Interactive Health Exercises</CardTitle>
+                <CardDescription>Follow along with animated guides to improve your health and wellness</CardDescription>
+              </CardHeader>
+            </Card>
+          </div>
         </div>
 
         {/* Recent Activity */}
@@ -323,38 +364,27 @@ export default function DashboardPage() {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-                <div className="flex items-center space-x-3">
-                  <Brain className="h-5 w-5 text-blue-600" />
-                  <div>
-                    <p className="font-medium">Disease Prediction Completed</p>
-                    <p className="text-sm text-gray-600">Analyzed symptoms for respiratory issues</p>
+              {activities.length === 0 ? (
+                <div className="text-gray-500 text-center py-8">No recent activity yet.</div>
+              ) : (
+                activities.map((activity, idx) => (
+                  <div key={idx} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                    <div className="flex items-center space-x-3">
+                      {activity.icon === "Brain" && <Brain className="h-5 w-5 text-blue-600" />}
+                      {activity.icon === "Camera" && <Camera className="h-5 w-5 text-green-600" />}
+                      {activity.icon === "Pill" && <Pill className="h-5 w-5 text-orange-600" />}
+                      {/* Add more icons as needed */}
+                      <div>
+                        <p className="font-medium">{activity.title}</p>
+                        <p className="text-sm text-gray-600">{activity.description}</p>
+                      </div>
+                    </div>
+                    <Badge variant="secondary">
+                      {formatTimeAgo(activity.timestamp)}
+                    </Badge>
                   </div>
-                </div>
-                <Badge variant="secondary">2 hours ago</Badge>
-              </div>
-
-              <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-                <div className="flex items-center space-x-3">
-                  <Camera className="h-5 w-5 text-green-600" />
-                  <div>
-                    <p className="font-medium">Photo Analysis</p>
-                    <p className="text-sm text-gray-600">Skin condition assessment completed</p>
-                  </div>
-                </div>
-                <Badge variant="secondary">1 day ago</Badge>
-              </div>
-
-              <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-                <div className="flex items-center space-x-3">
-                  <Pill className="h-5 w-5 text-orange-600" />
-                  <div>
-                    <p className="font-medium">Medication Reminder</p>
-                    <p className="text-sm text-gray-600">Took morning medications on time</p>
-                  </div>
-                </div>
-                <Badge variant="secondary">2 days ago</Badge>
-              </div>
+                ))
+              )}
             </div>
           </CardContent>
         </Card>
@@ -428,4 +458,14 @@ const ChatAssistantBubble: React.FC = () => {
       `}</style>
     </button>
   )
+}
+
+// Helper to format time ago
+function formatTimeAgo(timestamp: number) {
+  const now = Date.now()
+  const diff = Math.floor((now - timestamp) / 1000)
+  if (diff < 60) return `${diff}s ago`
+  if (diff < 3600) return `${Math.floor(diff / 60)}m ago`
+  if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`
+  return `${Math.floor(diff / 86400)}d ago`
 }
