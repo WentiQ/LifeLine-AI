@@ -106,6 +106,16 @@ export default function PredictPage() {
 
       const result = await response.json()
       setPrediction(result)
+
+      // Log activity (removed invalid call to Activity)
+      // You can implement your own logging here if needed
+      // saveActivity({
+      //   type: "prediction",
+      //   title: "Disease Prediction Completed",
+      //   description: `Predicted: ${result.primaryDiagnosis || "Unknown"}`,
+      //   icon: "Brain",
+      //   timestamp: Date.now(),
+      // })
     } catch (error) {
       console.error("Error analyzing symptoms:", error)
       setPrediction({

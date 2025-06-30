@@ -20,9 +20,10 @@ import {
   AlertTriangle,
 } from "lucide-react"
 import { useRouter } from "next/navigation"
-import { useEffect, useState, useRef } from "react"
+import { useEffect, useState, useRef, Suspense } from "react"
 import { Loader2 } from "lucide-react"
 // import ChatAssistantBubble from "@/components/ChatAssistantBubble"
+import FutureHealthContent from "./FutureHealthContent"
 
 export default function DashboardPage() {
   const router = useRouter()
@@ -427,5 +428,13 @@ const ChatAssistantBubble: React.FC = () => {
         }
       `}</style>
     </button>
+  )
+}
+
+export function FutureHealthPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <FutureHealthContent />
+    </Suspense>
   )
 }
