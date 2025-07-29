@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect, Suspense } from "react"
-import { useSearchParams } from "next/navigation"
+// import { useSearchParams } from "next/navigation"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -64,7 +64,7 @@ export default function FutureHealthPage() {
   const [savedPredictions, setSavedPredictions] = useState<any[]>([])
   const [showSaved, setShowSaved] = useState(false)
 
-  const searchParams = useSearchParams();
+  // const searchParams = useSearchParams();
 
 
   const commonBadHabits = [
@@ -277,7 +277,7 @@ export default function FutureHealthPage() {
       const saved = localStorage.getItem("savedFuturePredictions");
       if (saved) setSavedPredictions(JSON.parse(saved));
 
-      // Optional: support share link
+      // Support share link using window.location.search
       const params = new URLSearchParams(window.location.search);
       const shareId = params.get("share");
       if (shareId && saved) {
