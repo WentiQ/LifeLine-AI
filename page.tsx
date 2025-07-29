@@ -23,7 +23,7 @@ import { useRouter } from "next/navigation"
 import { useEffect, useState, useRef, Suspense } from "react"
 import { Loader2 } from "lucide-react"
 // import ChatAssistantBubble from "@/components/ChatAssistantBubble"
-import FutureHealthContent from "./FutureHealthContent"
+// import FutureHealthContent from "./FutureHealthContent"
 
 export default function DashboardPage() {
   const router = useRouter()
@@ -431,10 +431,10 @@ const ChatAssistantBubble: React.FC = () => {
   )
 }
 
-export function FutureHealthPage() {
-  return (
-    <Suspense fallback={<div>Loading...</div>}>
-      <FutureHealthContent />
-    </Suspense>
-  )
-}
+// export function FutureHealthPage() {
+//   return (
+//     <Suspense fallback={<div>Loading...</div>}>
+//       <FutureHealthContent />
+//     </Suspense>
+//   )
+// }
