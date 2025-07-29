@@ -7,7 +7,7 @@ import OpenAI from "openai";
 // Then access it with: process.env.OPENROUTER_API_KEY
 const openrouter = new OpenAI({
   baseURL: "https://openrouter.ai/api/v1",
-  apiKey: "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",
+  apiKey: process.env.OPENROUTER_API_KEY, // Use env variable here
   defaultHeaders: {
     // Replace with your actual site URL and app name
     "HTTP-Referer": "http://localhost:3000",

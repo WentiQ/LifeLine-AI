@@ -2,7 +2,7 @@ import { type NextRequest, NextResponse } from "next/server";
 import OpenAI from "openai";
 
 const openai = new OpenAI({
-  apiKey: "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",
+  apiKey: process.env.OPENROUTER_API_KEY, // Use env variable here
   baseURL: "https://openrouter.ai/api/v1",
 });
 
@@ -62,15 +62,15 @@ Important: This is for informational purposes only and should not replace profes
     const completion = await openai.chat.completions.create({
       model: "deepseek/deepseek-r1-0528:free",
       messages: [
-        {
-          role: "system",
-          content:
-            "You are a medical AI assistant providing health analysis. Always emphasize that this is for informational purposes only and recommend consulting healthcare professionals. Respond only with valid JSON.",
-        },
-        {
-          role: "user",
-          content: prompt,
-        },
+      {
+        role: "system",
+        content:
+        "You are a medical AI assistant providing health analysis. Always emphasize that this is for informational purposes only and recommend consulting healthcare professionals. Respond only with valid JSON.",
+      },
+      {
+        role: "user",
+        content: prompt,
+      },
       ],
       temperature: 0.3,
       max_tokens: 2000,

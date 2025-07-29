@@ -48,7 +48,8 @@ User Context (if any): ${JSON.stringify(userContext)}
     const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
       method: "POST",
       headers: {
-        "Authorization": `Bearer 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`,
+        "Authorization": `Bearer ${process.env.OPENROUTER_API_KEY}`,
+        // "Authorization": `Bearer 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`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({

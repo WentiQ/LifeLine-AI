@@ -73,7 +73,7 @@ Please provide comprehensive future health predictions in the following JSON for
       headers: {
         "Content-Type": "application/json",
         Authorization:
-          "Bearer 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",
+          `Bearer ${process.env.OPENROUTER_API_KEY}`, // Use env variable here
       },
       body: JSON.stringify({
         model: "deepseek/deepseek-r1-0528:free",

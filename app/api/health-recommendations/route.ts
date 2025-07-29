@@ -47,7 +47,7 @@ Please provide comprehensive health recommendations in the following JSON format
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer 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`,
+        Authorization: `Bearer ${process.env.OPENROUTER_API_KEY}`,
       },
       body: JSON.stringify({
         model: "deepseek/deepseek-r1-0528:free",
