@@ -274,29 +274,28 @@ export default function FutureHealthPage() {
 
   useEffect(() => {
     if (typeof window !== "undefined") {
-      const saved = localStorage.getItem("savedFuturePredictions");
-      if (saved) setSavedPredictions(JSON.parse(saved));
+      const saved = localStorage.getItem("savedFuturePredictions")
+      if (saved) setSavedPredictions(JSON.parse(saved))
 
       // Optional: support share link
-      const params = new URLSearchParams(window.location.search);
-      const shareId = params.get("share");
+      const shareId = searchParams?.get("share")
       if (shareId && saved) {
-        const arr = JSON.parse(saved);
-        const found = arr.find((p: any) => p.id === shareId);
+        const arr = JSON.parse(saved)
+        const found = arr.find((p: any) => p.id === shareId)
         if (found) {
-          setPredictions(found.predictions);
-          setBadHabits(found.badHabits);
-          setCurrentHealth(found.currentHealth);
-          setHabituationPeriod(found.habituationPeriod);
-          setExercise(found.exercise);
-          setDiet(found.diet);
-          setStress(found.stress);
-          setSleep(found.sleep);
-          setShowSaved(true);
+          setPredictions(found.predictions)
+          setBadHabits(found.badHabits)
+          setCurrentHealth(found.currentHealth)
+          setHabituationPeriod(found.habituationPeriod)
+          setExercise(found.exercise)
+          setDiet(found.diet)
+          setStress(found.stress)
+          setSleep(found.sleep)
+          setShowSaved(true)
         }
       }
     }
-  }, []);
+  }, [searchParams])
 
   return (
     <Suspense fallback={<div>Loading...</div>}>
