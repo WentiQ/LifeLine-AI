@@ -11,7 +11,7 @@ import { ArrowLeft, Brain, Clock, Dumbbell, Heart, Moon, Salad, Target, Trending
 import Link from "next/link"
 import { Suspense, useEffect, useState } from "react"
 import { v4 as uuidv4 } from "uuid"
-import { useSearchParams } from "next/navigation"
+// import { useSearchParams } from "next/navigation"
 import { Progress } from "@/components/ui/progress"
 
 export default function HealthCoachPage() {
@@ -30,13 +30,14 @@ export default function HealthCoachPage() {
   const [customCondition, setCustomCondition] = useState("")
   const [savedPlans, setSavedPlans] = useState<any[]>([])
 
-  const searchParams = useSearchParams();
+  // const searchParams = useSearchParams();
   useEffect(() => {
     if (typeof window !== "undefined") {
       const saved = localStorage.getItem("savedHealthPlans")
       if (saved) setSavedPlans(JSON.parse(saved))
 
-      const shareId = searchParams?.get("share")
+      const params = new URLSearchParams(window.location.search)
+      const shareId = params.get("share")
       if (shareId && saved) {
         const arr = JSON.parse(saved)
         const found = arr.find((p: any) => p.id === shareId)
@@ -48,7 +49,7 @@ export default function HealthCoachPage() {
         }
       }
     }
-  }, [searchParams])
+  }, [])
 
   const availableGoals = [
     "Weight Loss",

@@ -11,7 +11,7 @@ import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
 import { Activity, AlertTriangle, ArrowLeft, Brain, Calendar, Heart, Thermometer, TrendingUp } from "lucide-react"
 import Link from "next/link"
-import { useSearchParams } from "next/navigation"
+// import { useSearchParams } from "next/navigation"
 import { v4 as uuidv4 } from "uuid"
 import jsPDF from "jspdf"
 
@@ -31,7 +31,7 @@ export default function PredictPage() {
   const [age, setAge] = useState("")
   const [gender, setGender] = useState("")
 
-  const searchParams = useSearchParams();
+  // const searchParams = useSearchParams();
 
   const commonSymptoms = [
     "Fever",
@@ -57,8 +57,9 @@ export default function PredictPage() {
       const saved = localStorage.getItem("savedPredictions")
       if (saved) setSavedPredictions(JSON.parse(saved))
 
-      // Check for share param
-      const shareId = searchParams?.get("share")
+      // Check for share param using URLSearchParams
+      const params = new URLSearchParams(window.location.search)
+      const shareId = params.get("share")
       if (shareId && saved) {
         const arr = JSON.parse(saved)
         const found = arr.find((p: any) => p.id === shareId)
@@ -69,7 +70,7 @@ export default function PredictPage() {
         }
       }
     }
-  }, [searchParams])
+  }, [])
 
   const handleSymptomToggle = (symptom: string) => {
     setSymptoms((prev) => (prev.includes(symptom) ? prev.filter((s) => s !== symptom) : [...prev, symptom]))
