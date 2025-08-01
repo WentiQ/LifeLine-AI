@@ -92,11 +92,23 @@ export default function DashboardPage() {
   }
 
   const handleNavigate = (href: string) => {
-    // Only show loading animation if NOT navigating to dashboard itself
-    if (href !== "/dashboard") {
-      setIsNavigating(true)
+    if (href === "/predict") {
+      // Get user plan from localStorage (or however you store it)
+      const user = JSON.parse(localStorage.getItem("currentUser") || "{}");
+      const plan = user.plan || "free";
+      // Route based on plan
+      if (plan === "premium") {
+        router.push("/predict"); // Premium predict page
+      } else {
+        router.push("/predict_free"); // Free predict page
+      }
+      return;
     }
-    router.push(href)
+    // Default navigation for other routes
+    if (href !== "/dashboard") {
+      setIsNavigating(true);
+    }
+    router.push(href);
   }
 
   const handleHeaderNavigate = (href: string) => {
@@ -265,7 +277,7 @@ export default function DashboardPage() {
             </Card>
           </div>
 
-          <div onClick={() => handleNavigate("/photo-diagnosis")} className="cursor-pointer">
+          {/* <div onClick={() => handleNavigate("/photo-diagnosis")} className="cursor-pointer">
             <Card className="hover:shadow-lg transition-shadow">
               <CardHeader>
                 <Camera className="h-10 w-10 text-green-600 mb-2" />
@@ -273,7 +285,7 @@ export default function DashboardPage() {
                 <CardDescription>Upload or capture photos for instant visual health analysis</CardDescription>
               </CardHeader>
             </Card>
-          </div>
+          </div> */}
 
           <div onClick={() => handleNavigate("/doctors")} className="cursor-pointer">
             <Card className="hover:shadow-lg transition-shadow">
@@ -295,7 +307,7 @@ export default function DashboardPage() {
             </Card>
           </div>
 
-          <div onClick={() => handleNavigate("/hospitals")} className="cursor-pointer">
+          {/* <div onClick={() => handleNavigate("/hospitals")} className="cursor-pointer">
             <Card className="hover:shadow-lg transition-shadow">
               <CardHeader>
                 <MapPin className="h-10 w-10 text-teal-600 mb-2" />
@@ -303,7 +315,7 @@ export default function DashboardPage() {
                 <CardDescription>Locate the best hospitals and medical facilities nearby</CardDescription>
               </CardHeader>
             </Card>
-          </div>
+          </div> */}
 
           <div onClick={() => handleNavigate("/health-coach")} className="cursor-pointer">
             <Card className="hover:shadow-lg transition-shadow">

@@ -143,47 +143,63 @@ export default function SmartwatchPage() {
 
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {!isConnected ? (
-          <Card className="max-w-2xl mx-auto">
-            <CardHeader className="text-center">
-              <CardTitle className="flex items-center justify-center">
-                <Bluetooth className="h-8 w-8 mr-2 text-blue-600" />
-                Connect Your Smartwatch
-              </CardTitle>
-              <CardDescription>
-                Connect your smartwatch to get real-time health insights and AI-powered analysis
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="text-center space-y-6">
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div className="p-4 border rounded-lg">
-                  <Activity className="h-8 w-8 mx-auto mb-2 text-blue-600" />
-                  <p className="text-sm font-medium">Apple Watch</p>
+          <>
+            <Card className="max-w-2xl mx-auto mb-6 border-yellow-300 bg-yellow-50">
+              <CardHeader className="text-center">
+                <CardTitle className="flex items-center justify-center text-yellow-700">
+                  <Bluetooth className="h-6 w-6 mr-2" />
+                  Unable to Connect to Most Smartwatches
+                </CardTitle>
+                <CardDescription>
+                  <span className="text-yellow-800">
+                    Most smartwatches are not supported for direct connection.<br />
+                    This demo uses simulated data. Please check back for real device support in future updates.
+                  </span>
+                </CardDescription>
+              </CardHeader>
+            </Card>
+            <Card className="max-w-2xl mx-auto">
+              <CardHeader className="text-center">
+                <CardTitle className="flex items-center justify-center">
+                  <Bluetooth className="h-8 w-8 mr-2 text-blue-600" />
+                  Connect Your Smartwatch
+                </CardTitle>
+                <CardDescription>
+                  Connect your smartwatch to get real-time health insights and AI-powered analysis
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="text-center space-y-6">
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  <div className="p-4 border rounded-lg">
+                    <Activity className="h-8 w-8 mx-auto mb-2 text-blue-600" />
+                    <p className="text-sm font-medium">Apple Watch</p>
+                  </div>
+                  <div className="p-4 border rounded-lg">
+                    <Activity className="h-8 w-8 mx-auto mb-2 text-green-600" />
+                    <p className="text-sm font-medium">Samsung Galaxy</p>
+                  </div>
+                  <div className="p-4 border rounded-lg">
+                    <Activity className="h-8 w-8 mx-auto mb-2 text-purple-600" />
+                    <p className="text-sm font-medium">Fitbit</p>
+                  </div>
+                  <div className="p-4 border rounded-lg">
+                    <Activity className="h-8 w-8 mx-auto mb-2 text-orange-600" />
+                    <p className="text-sm font-medium">Garmin</p>
+                  </div>
                 </div>
-                <div className="p-4 border rounded-lg">
-                  <Activity className="h-8 w-8 mx-auto mb-2 text-green-600" />
-                  <p className="text-sm font-medium">Samsung Galaxy</p>
-                </div>
-                <div className="p-4 border rounded-lg">
-                  <Activity className="h-8 w-8 mx-auto mb-2 text-purple-600" />
-                  <p className="text-sm font-medium">Fitbit</p>
-                </div>
-                <div className="p-4 border rounded-lg">
-                  <Activity className="h-8 w-8 mx-auto mb-2 text-orange-600" />
-                  <p className="text-sm font-medium">Garmin</p>
-                </div>
-              </div>
 
-              <Button onClick={connectSmartwatch} size="lg" className="px-8">
-                <Bluetooth className="h-5 w-5 mr-2" />
-                Connect Smartwatch (Demo)
-              </Button>
+                <Button onClick={connectSmartwatch} size="lg" className="px-8">
+                  <Bluetooth className="h-5 w-5 mr-2" />
+                  Connect Smartwatch (Demo Only)
+                </Button>
 
-              <div className="text-sm text-gray-600">
-                <p>Supported metrics:</p>
-                <p>Heart Rate • Steps • Sleep • Blood Oxygen • Stress • Activity</p>
-              </div>
-            </CardContent>
-          </Card>
+                <div className="text-sm text-gray-600">
+                  <p>Supported metrics:</p>
+                  <p>Heart Rate • Steps • Sleep • Blood Oxygen • Stress • Activity</p>
+                </div>
+              </CardContent>
+            </Card>
+          </>
         ) : (
           <div className="space-y-8">
             {/* Real-time Metrics */}

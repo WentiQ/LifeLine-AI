@@ -63,17 +63,24 @@ export default function ProfilePage() {
   })
 
   // Add plan state
-  const [plan, setPlan] = useState<"free" | "premium">("free")
+  const [plan, setPlan] = useState<"free" | "premium">("premium")
 
   // Load plan from localStorage on mount
   useEffect(() => {
     if (typeof window !== "undefined") {
-      const user = JSON.parse(localStorage.getItem("currentUser") || "{}")
-      setPlan(user.plan === "premium" ? "premium" : "free")
+      const user = JSON.parse(localStorage.getItem("currentUser") || "{}");
+      let loadedPlan = "premium";
+      if (user.plan === "free" || user.plan === "premium") {
+        loadedPlan = user.plan;
+      }
+      setPlan(loadedPlan as "free" | "premium");
       setProfileData((prev) => ({
         ...prev,
         ...user,
-      }))
+      }));
+      // Always sync plan to localStorage!
+      user.plan = loadedPlan;
+      localStorage.setItem("currentUser", JSON.stringify(user));
     }
   }, [])
 

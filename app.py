@@ -1,30 +1,59 @@
-# Save as app.py and run: uvicorn app:app --reload --port 5000
-from fastapi import FastAPI, Request
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-import pickle
+import joblib
+import json
 
+# === Load model and metadata ===
+model = joblib.load("model.pkl")
+labels = joblib.load("labels.pkl")
+
+with open("symptom_to_index.json") as f:
+    symptom_to_index = json.load(f)
+
+# === Create app ===
 app = FastAPI()
 
-# Load your models
-with open("symptom_diagnosis_model.pkl", "rb") as f:
-    model = pickle.load(f)
-with open("symptom_map.pkl", "rb") as f:
-    symptom_map = pickle.load(f)
-with open("label_encoder.pkl", "rb") as f:
-    label_encoder = pickle.load(f)
+# Enable frontend access (CORS)
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Change to your frontend domain in production
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
-class PredictRequest(BaseModel):
-    symptoms: list
+# Define request format
+class SymptomRequest(BaseModel):
+    symptom_names: list[str]
 
+# === Predict endpoint ===
 @app.post("/predict")
-async def predict(req: PredictRequest):
-    # Convert symptoms to model input
-    input_vector = [1 if s in req.symptoms else 0 for s in symptom_map]
-    pred = model.predict([input_vector])[0]
-    conf = max(model.predict_proba([input_vector])[0]) * 100
-    disease = label_encoder.inverse_transform([pred])[0]
-    return {"predictedDisease": disease, "confidence": round(conf)}
+def predict(request: SymptomRequest):
+    input_vector = [0] * len(symptom_to_index)
 
-# Save with protocol=4 for better compatibility
-with open("symptom_diagnosis_model.pkl", "wb") as f:
-    pickle.dump(model, f, protocol=4)
+    for name in request.symptom_names:
+        key = name.strip().lower()
+        if key in symptom_to_index:
+            input_vector[symptom_to_index[key]] = 1
+
+    if sum(input_vector) == 0:
+        return {"error": "No valid symptoms provided."}
+
+    proba = model.predict_proba([input_vector])[0]
+
+    ranked = sorted(
+        [
+            {"disease": labels[i], "confidence": round(prob, 4)}
+            for i, prob in enumerate(proba)
+            if prob > 0
+        ],
+        key=lambda x: x["confidence"],
+        reverse=True
+    )
+
+    return {
+        "top_prediction": ranked[0]["disease"],
+        "confidence": ranked[0]["confidence"],
+        "ranked_predictions": ranked
+    }

@@ -2,15 +2,56 @@ import { type NextRequest, NextResponse } from "next/server";
 import OpenAI from "openai";
 
 const openai = new OpenAI({
-  apiKey: process.env.OPENROUTER_API_KEY, // Use env variable here
-  baseURL: "https://openrouter.ai/api/v1",
+  apiKey: process.env.OPENAI_API_KEY,
 });
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
+    interface PredictDiseaseRequestBody {
+      symptoms?: string[];
+      plan?: string;
+      medicalHistory?: {
+        additionalSymptoms?: string;
+        conditions?: string;
+        medications?: string;
+        familyHistory?: string;
+      };
+      personalInfo?: {
+        age?: string | number;
+        gender?: string;
+      };
+    }
 
-    const symptoms = Array.isArray(body.symptoms) ? body.symptoms : [];
+    const symptoms: string[] = Array.isArray((body as PredictDiseaseRequestBody).symptoms)
+      ? (body as PredictDiseaseRequestBody).symptoms!.map((s: string) => s.trim().toLowerCase())
+      : [];
+
+    const plan = body.plan || "free";
+
+    if (plan === "free") {
+      const response = await fetch("https://web-production-6742f.up.railway.app/predict", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ symptom_names: symptoms }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Python model error");
+      }
+
+      const result = await response.json();
+
+      return NextResponse.json({
+        primaryDiagnosis: result.top_prediction,
+        confidence: result.confidence,
+        recommendations: [
+          "Consult with a healthcare professional for proper diagnosis",
+          "Monitor symptoms closely and track any changes",
+        ],
+      });
+    }
+
     const medicalHistory = body.medicalHistory || {};
     const personalInfo = body.personalInfo || {};
 
@@ -32,15 +73,10 @@ Please provide a detailed medical analysis in the following JSON format:
   "severity": "Mild/Moderate/Severe",
   "description": "Detailed explanation of the condition",
   "recommendations": ["Treatment recommendation 1", "Treatment recommendation 2"],
-  "possibleCauses": [
-    "Genetic predisposition",
-    "Lifestyle factors (e.g., poor diet)",
-    "Environmental triggers",
-    "...etc."
-  ],
+  "possibleCauses": ["Cause 1", "Cause 2"],
   "futureOutlook": {
-    "withTreatment": "Expected outcome with proper treatment",
-    "withoutTreatment": "Potential complications without treatment"
+    "withTreatment": "Outcome with treatment",
+    "withoutTreatment": "Complications without treatment"
   },
   "suggestedTests": ["Test 1", "Test 2"],
   "urgency": "Non-urgent/Urgent/Emergency",
@@ -48,12 +84,11 @@ Please provide a detailed medical analysis in the following JSON format:
     {"condition": "Alternative 1", "probability": 15},
     {"condition": "Alternative 2", "probability": 10}
   ],
-  "lifestyle_recommendations": ["Lifestyle change 1", "Lifestyle change 2"],
-  "followUp": "When to follow up with healthcare provider",
-
-  "foodRecommendations": ["Foods to eat 1", "Foods to eat 2"],
-  "foodsToAvoid": ["Food to avoid 1", "Food to avoid 2"],
-  "drugsOrMedicines": ["Medicine 1", "Medicine 2"],
+  "lifestyle_recommendations": ["Lifestyle 1", "Lifestyle 2"],
+  "followUp": "When to follow up",
+  "foodRecommendations": ["Food 1", "Food 2"],
+  "foodsToAvoid": ["Avoid 1", "Avoid 2"],
+  "drugsOrMedicines": ["Drug 1", "Drug 2"],
   "remedies": ["Remedy 1", "Remedy 2"]
 }
 
@@ -62,15 +97,15 @@ Important: This is for informational purposes only and should not replace profes
     const completion = await openai.chat.completions.create({
       model: "deepseek/deepseek-r1-0528:free",
       messages: [
-      {
-        role: "system",
-        content:
-        "You are a medical AI assistant providing health analysis. Always emphasize that this is for informational purposes only and recommend consulting healthcare professionals. Respond only with valid JSON.",
-      },
-      {
-        role: "user",
-        content: prompt,
-      },
+        {
+          role: "system",
+          content:
+            "You are a medical AI assistant providing health analysis. Always emphasize that this is for informational purposes only and recommend consulting healthcare professionals. Respond only with valid JSON.",
+        },
+        {
+          role: "user",
+          content: prompt,
+        },
       ],
       temperature: 0.3,
       max_tokens: 2000,
@@ -99,21 +134,19 @@ Important: This is for informational purposes only and should not replace profes
         ],
         possibleCauses: [
           "Genetic predisposition",
-          "Lifestyle factors (e.g., poor diet)",
+          "Lifestyle factors",
           "Environmental triggers",
-          "Infections or illnesses",
-          "Stress and mental health factors",
         ],
         futureOutlook: {
           withTreatment:
             "With proper medical care and treatment, most conditions can be effectively managed",
           withoutTreatment:
-            "Untreated symptoms may persist or potentially worsen over time",
+            "Untreated symptoms may persist or worsen over time",
         },
         suggestedTests: [
           "Complete medical examination",
           "Basic blood work",
-          "Relevant diagnostic tests as recommended by physician",
+          "Relevant diagnostic tests",
         ],
         urgency: "Non-urgent",
         alternativeDiagnoses: [
@@ -121,29 +154,19 @@ Important: This is for informational purposes only and should not replace profes
           { condition: "Requires professional evaluation", probability: 15 },
         ],
         lifestyle_recommendations: [
-          "Maintain regular sleep schedule",
-          "Stay hydrated and eat balanced meals",
-          "Engage in appropriate physical activity",
-          "Manage stress levels",
+          "Regular sleep schedule",
+          "Healthy diet",
+          "Physical activity",
+          "Stress management",
         ],
-        followUp: "Within 1-2 weeks if symptoms persist, sooner if symptoms worsen",
-
-        foodRecommendations: [
-          "Include fresh fruits and vegetables",
-          "Consume lean proteins like chicken and fish",
-        ],
-        foodsToAvoid: [
-          "Limit processed foods and sugary snacks",
-          "Avoid excessive salt and fried foods",
-        ],
+        followUp: "Within 1–2 weeks or sooner if symptoms worsen",
+        foodRecommendations: ["Fresh fruits", "Lean proteins"],
+        foodsToAvoid: ["Processed foods", "Excessive sugar"],
         drugsOrMedicines: [
-          "Use medications prescribed by your healthcare provider",
-          "Avoid self-medicating without professional advice",
+          "Only those prescribed by a doctor",
+          "Avoid self-medication",
         ],
-        remedies: [
-          "Rest adequately and stay hydrated",
-          "Consider warm compresses for pain relief",
-        ],
+        remedies: ["Hydration", "Rest"],
       };
     }
 
@@ -171,17 +194,16 @@ Important: This is for informational purposes only and should not replace profes
           },
           suggestedTests: ["Complete medical examination"],
           urgency: "Consult healthcare provider",
-
-          foodRecommendations: ["Better consult a nutritionist", "avoid self-diagnosing"],
-          foodsToAvoid: ["Better consult a nutritionist", "avoid self-diagnosing"],
+          foodRecommendations: ["Better consult a nutritionist"],
+          foodsToAvoid: ["Avoid self-diagnosing"],
           drugsOrMedicines: [
-            'Better consult a healthcare provider for medication advice',
-            "Avoid self-medicating without professional advice",
+            "Consult a healthcare provider",
+            "Avoid self-medicating",
           ],
-          remedies: ['Better consult a healthcare provider for remedies', "Avoid self-medicating without professional advice"],
+          remedies: ["Consult a healthcare provider"],
         },
       },
-      { status: 500 },
+      { status: 500 }
     );
   }
 }
