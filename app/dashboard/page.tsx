@@ -93,18 +93,9 @@ export default function DashboardPage() {
 
   const handleNavigate = (href: string) => {
     if (href === "/predict") {
-      // Get user plan from localStorage (or however you store it)
-      const user = JSON.parse(localStorage.getItem("currentUser") || "{}");
-      const plan = user.plan || "free";
-      // Route based on plan
-      if (plan === "premium") {
-        router.push("/predict"); // Premium predict page
-      } else {
-        router.push("/predict_free"); // Free predict page
-      }
+      router.push("/predict"); // Always go to premium predict page
       return;
     }
-    // Default navigation for other routes
     if (href !== "/dashboard") {
       setIsNavigating(true);
     }
